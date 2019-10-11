@@ -1,5 +1,5 @@
 # [CRC Project - IST 2019/2020](https://fenix.tecnico.ulisboa.pt/disciplinas/CRC7/2019-2020/1-semestre/project-1-0f6)
-This repository was created to develop both project 1 and project 2 from **Network Science** course.
+This repository was created to develop both project 1 and project 2 of **Network Science** course.
 
 # Dependencies
 ## Install python
