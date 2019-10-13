@@ -11,3 +11,4 @@ notebook==6.0.1
 pycairo==1.18.1
 vext==0.7.3
 vext.gi==0.7.0
+powerlaw==1.4.6
