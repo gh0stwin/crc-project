@@ -3,6 +3,7 @@ import graph_tool.stats as gt_stats
 import math
 
 from networkx.algorithms.assortativity import average_degree_connectivity, average_neighbor_degree, degree_pearson_correlation_coefficient, k_nearest_neighbors
+from networkx.algorithms.centrality import degree_centrality as nx_degree_centrality
 from networkx.algorithms.cluster import average_clustering
 from networkx.algorithms.cluster import transitivity
 from networkx.algorithms.components import connected_component_subgraphs
@@ -28,7 +29,9 @@ def avg_path_length(g):
         gt_stats.vertex_average(g, gt.shortest_distance(g))[0]
     ) / (g.num_vertices() - 1)
 
-def degree
+def degree_centrality(g):
+    return g.get_total_degrees(g.get_vertices()) / \
+        (g.num_vertices() - 1)
 
 def degree_dist(g):
     return gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
@@ -87,12 +90,21 @@ if __name__ == '__main__':
     second_m = np.sum(np.array(degree_histogram(nx_g)) * (np.arange(len(degree_histogram(nx_g))) ** 2))
     nx_v = math.sqrt(second_m - nx_ad ** 2)
     nx_ap = degree_pearson_correlation_coefficient(nx_g)
-    nx_aknn = average_degree_connectivity(nx_g)
+    nx_aknn = np.flip(np.array(
+        [it[1] for it in sorted(
+            average_degree_connectivity(nx_g).items(), reverse=True
+        )]
+    ))
+
     nx_dh = np.array(degree_histogram(nx_g)) / nx_g.number_of_nodes()
     nx_cdh = np.flip(np.flip(
         (np.array(degree_histogram(nx_g)) / nx_g.number_of_nodes())
         , 0
-    ).cumsum(), 0)
+    ).cumsum(),0)
+
+    nx_dc = np.array(
+            [it[1] for it in sorted(nx_degree_centrality(nx_g).items())]
+    )
 
     write_gml(nx_g, './graph.gml')
     gt_g = gt.load_graph('./graph.gml')
@@ -108,6 +120,7 @@ if __name__ == '__main__':
     gt_aknn = avg_neighbor_corr(gt_g)
     gt_dh = degree_dist(gt_g)
     gt_cdh = cum_degree_dist(gt_g)
+    gt_dc = degree_centrality(gt_g)
 
     assert math.isclose(nx_apl, gt_apl) == True
     assert math.isclose(nx_ad, gt_ad) == True
@@ -119,11 +132,9 @@ if __name__ == '__main__':
     print(cum_deg_powerlaw_low_high_sat(gt_g))
     assert math.isclose(nx_ap, gt_ap) == True
     assert np.array_equal(
-        np.flip(np.array(
-            [it[1] for it in sorted(nx_aknn.items(), reverse=True)]
-        )), 
-        gt_aknn[np.isfinite(gt_aknn)]
+        nx_aknn, gt_aknn[np.isfinite(gt_aknn)]
     ) == True
 
     assert np.array_equal(nx_dh, gt_dh) == True
-    assert np.array_equal(nx_cdh, gt_cdh)
+    assert np.array_equal(nx_cdh, gt_cdh) == True
+    assert np.allclose(nx_dc, gt_dc) == True
