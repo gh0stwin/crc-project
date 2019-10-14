@@ -21,12 +21,20 @@ def avg_degree(g):
     return gt_stats.vertex_average(g, 'total')[0]
 
 def avg_neighbor_corr(g):
-    return gt.avg_neighbor_corr(g, 'total', 'total')
+    return gt.avg_neighbor_corr(g, 'total', 'total')[0]
 
 def avg_path_length(g):
     return np.sum(
         gt_stats.vertex_average(g, gt.shortest_distance(g))[0]
     ) / (g.num_vertices() - 1)
+
+def degree
+
+def degree_dist(g):
+    return gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
+
+def cum_degree_dist(g):
+    return np.flip(np.flip(degree_dist(g), 0).cumsum(), 0)
 
 def degree_ratio_of_giant_comp(g):
     return gt.extract_largest_component(g).num_vertices() / \
@@ -79,7 +87,12 @@ if __name__ == '__main__':
     second_m = np.sum(np.array(degree_histogram(nx_g)) * (np.arange(len(degree_histogram(nx_g))) ** 2))
     nx_v = math.sqrt(second_m - nx_ad ** 2)
     nx_ap = degree_pearson_correlation_coefficient(nx_g)
-    nx_aknn = np.array(average_degree_connectivity(nx_g).values())
+    nx_aknn = average_degree_connectivity(nx_g)
+    nx_dh = np.array(degree_histogram(nx_g)) / nx_g.number_of_nodes()
+    nx_cdh = np.flip(np.flip(
+        (np.array(degree_histogram(nx_g)) / nx_g.number_of_nodes())
+        , 0
+    ).cumsum(), 0)
 
     write_gml(nx_g, './graph.gml')
     gt_g = gt.load_graph('./graph.gml')
@@ -93,6 +106,8 @@ if __name__ == '__main__':
     gt_v = variance(gt_g)
     gt_ap = assortativity(gt_g)
     gt_aknn = avg_neighbor_corr(gt_g)
+    gt_dh = degree_dist(gt_g)
+    gt_cdh = cum_degree_dist(gt_g)
 
     assert math.isclose(nx_apl, gt_apl) == True
     assert math.isclose(nx_ad, gt_ad) == True
@@ -102,7 +117,13 @@ if __name__ == '__main__':
     assert math.isclose(nx_drogc, gt_drogc) == True
     assert math.isclose(nx_v, gt_v) == True
     print(cum_deg_powerlaw_low_high_sat(gt_g))
-    print(nx_aknn)
-    print(gt_aknn[0])
     assert math.isclose(nx_ap, gt_ap) == True
-    assert np.array_equal(nx_aknn, gt_aknn[0]) == True
+    assert np.array_equal(
+        np.flip(np.array(
+            [it[1] for it in sorted(nx_aknn.items(), reverse=True)]
+        )), 
+        gt_aknn[np.isfinite(gt_aknn)]
+    ) == True
+
+    assert np.array_equal(nx_dh, gt_dh) == True
+    assert np.array_equal(nx_cdh, gt_cdh)
