@@ -8,13 +8,13 @@ from gt_metrics import *
 P = 0.15
 
 def graph_analyser(min_vertices, max_vertices, step, samples):
-    metrics = open('./results/metrics.out', 'w+')
+    metrics = open('./results/metrics.out', 'a')
     graph_header(metrics)
 
     for vertices in range(min_vertices, max_vertices, step):
         vert_dep_metrics = open(
             './results/' + str(vertices) + '-vertices-metrics.out', 
-            'w+'
+            'a'
         )
 
         print('for ' + str(vertices) + ':')
@@ -22,14 +22,14 @@ def graph_analyser(min_vertices, max_vertices, step, samples):
 
         for i in range(samples):
             print('sample: ' + str(i))
-            print('er')
-            g_name = 'er-' + str(vertices) + '-' + str(i)
-            compute_all_metrics(
-                erdos_renyi_network(vertices, P),
-                g_name,
-                metrics, 
-                vert_dep_metrics
-            )
+            # print('er')
+            # g_name = 'er-' + str(vertices) + '-' + str(i)
+            # compute_all_metrics(
+            #     erdos_renyi_network(vertices, P),
+            #     g_name,
+            #     metrics, 
+            #     vert_dep_metrics
+            # )
 
             print('ba')
             g_name = 'ba-' + str(vertices) + '-' + str(i)
