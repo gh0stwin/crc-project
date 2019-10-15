@@ -1,18 +1,19 @@
 import graph_tool.all as gt
 import graph_tool.stats as gt_stats
 import math
-
 from networkx.algorithms.assortativity import average_degree_connectivity, average_neighbor_degree, degree_pearson_correlation_coefficient, k_nearest_neighbors
-from networkx.algorithms.centrality import degree_centrality as nx_degree_centrality
+from networkx.algorithms.centrality import degree_centrality as nx_degree_centrality, harmonic_centrality as nx_harmonic_centrality, betweenness_centrality as nx_betweenness_centrality
 from networkx.algorithms.cluster import average_clustering
 from networkx.algorithms.cluster import transitivity
 from networkx.algorithms.components import connected_component_subgraphs
+from networkx.algorithms.link_analysis.pagerank_alg import pagerank
 from networkx.algorithms.shortest_paths.generic import average_shortest_path_length
 from networkx.classes.function import degree_histogram
-from networkx.generators.random_graphs import barabasi_albert_graph
+from networkx.generators.random_graphs import barabasi_albert_graph, erdos_renyi_graph
 from networkx.readwrite.gml import write_gml
 import numpy as np
 import powerlaw as pl
+import random as rnd
 
 
 def assortativity(g):
@@ -29,34 +30,11 @@ def avg_path_length(g):
         gt_stats.vertex_average(g, gt.shortest_distance(g))[0]
     ) / (g.num_vertices() - 1)
 
-def degree_centrality(g):
-    return g.get_total_degrees(g.get_vertices()) / \
-        (g.num_vertices() - 1)
-
-def degree_dist(g):
-    return gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
+def betweenness_centrality(g):
+    return gt.betweenness(g)[0].get_array()
 
 def cum_degree_dist(g):
     return np.flip(np.flip(degree_dist(g), 0).cumsum(), 0)
-
-def degree_ratio_of_giant_comp(g):
-    return gt.extract_largest_component(g).num_vertices() / \
-        g.num_vertices()
-
-def diameter_approx(g):
-    return gt.pseudo_diameter(g)[0]
-
-def gb_clus_coef(g):
-    return gt.global_clustering(g)[0]
-
-def lcl_clus_coef(g):
-    return gt_stats.vertex_average(g, gt.local_clustering(g))[0]
-
-def deg_powerlaw_low_high_sat(g):
-    pl_fit = pl.Fit(
-        gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
-    )
-    return pl_fit.xmin, pl_fit.xmax
 
 def cum_deg_powerlaw_low_high_sat(g):
     deg_hist = gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
@@ -71,8 +49,72 @@ def cum_deg_powerlaw_low_high_sat(g):
         pl_fit.power_law.xmax
     )
 
+def degree_centrality(g):
+    return g.get_total_degrees(g.get_vertices()) / \
+        (g.num_vertices() - 1)
+
+def degree_dist(g):
+    return gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
+
+def degree_ratio_of_giant_comp(g):
+    return gt.extract_largest_component(g).num_vertices() / \
+        g.num_vertices()
+
+def deg_powerlaw_low_high_sat(g):
+    pl_fit = pl.Fit(
+        gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices(),
+        verbose=False
+    )
+
+    return (
+        pl_fit.power_law.alpha, 
+        pl_fit.power_law.xmin, 
+        pl_fit.power_law.xmax
+    )
+
+def dgm_network(n, seed=None):
+    if seed:
+        rnd.seed(seed)
+
+    g = gt.Graph(directed=False)
+    v1 = g.add_vertex()
+    v2 = g.add_vertex()
+    v3 = g.add_vertex()
+    g.add_edge(v1, v2)
+    g.add_edge(v2, v3)
+    g.add_edge(v3, v1)
+    edges = 2
+
+    for _ in range(n - 3):
+        new_v = g.add_vertex()
+        e = gt.find_edge(g, g.edge_index, rnd.randint(0, edges))[0]
+        g.add_edge(e.source(), new_v)
+        g.add_edge(new_v, e.target())
+        edges += 1
+
+    return g
+
+def diameter_approx(g):
+    return gt.pseudo_diameter(g)[0]
+
+def erdos_renyi_network(n, p, seed=None):
+    return nx2gt(erdos_renyi_graph(n, p, seed))
+
+def gb_clus_coef(g):
+    return gt.global_clustering(g)[0]
+
+def harmonic_centrality(g):
+    return gt.closeness(g, harmonic=True).get_array()
+
+def lcl_clus_coef(g):
+    return gt_stats.vertex_average(g, gt.local_clustering(g))[0]
+
 def max_degree(g):
     return gt_stats.vertex_hist(g, 'total')[1][-2]
+    
+def page_rank(g):
+    # return gt_stats.vertex_hist(g, gt.pagerank(g))
+    return gt.pagerank(g).get_array()
 
 def variance(g):
     degree_hist = gt_stats.vertex_hist(g, 'total')[0]
@@ -106,6 +148,15 @@ if __name__ == '__main__':
             [it[1] for it in sorted(nx_degree_centrality(nx_g).items())]
     )
 
+    nx_pr = np.array([val for val in pagerank(nx_g).values()])
+    nx_hc = np.array(
+        [val for val in nx_harmonic_centrality(nx_g).values()]
+    ) / nx_g.number_of_nodes()
+
+    nx_bc = np.array(
+        [val for val in nx_betweenness_centrality(nx_g).values()]
+    )
+
     write_gml(nx_g, './graph.gml')
     gt_g = gt.load_graph('./graph.gml')
 
@@ -121,20 +172,148 @@ if __name__ == '__main__':
     gt_dh = degree_dist(gt_g)
     gt_cdh = cum_degree_dist(gt_g)
     gt_dc = degree_centrality(gt_g)
+    gt_hc = harmonic_centrality(gt_g)
+    gt_pr = page_rank(gt_g)
+    gt_bc = betweenness_centrality(gt_g)
 
-    assert math.isclose(nx_apl, gt_apl) == True
-    assert math.isclose(nx_ad, gt_ad) == True
-    assert math.isclose(nx_gcc, gt_gcc) == True
-    assert math.isclose(nx_lcc, gt_lcc) == True
+    assert math.isclose(nx_apl, gt_apl)
+    assert math.isclose(nx_ad, gt_ad)
+    assert math.isclose(nx_gcc, gt_gcc)
+    assert math.isclose(nx_lcc, gt_lcc)
     assert nx_md == gt_md
-    assert math.isclose(nx_drogc, gt_drogc) == True
-    assert math.isclose(nx_v, gt_v) == True
+    assert math.isclose(nx_drogc, gt_drogc)
+    assert math.isclose(nx_v, gt_v)
     print(cum_deg_powerlaw_low_high_sat(gt_g))
-    assert math.isclose(nx_ap, gt_ap) == True
+    assert math.isclose(nx_ap, gt_ap)
     assert np.array_equal(
         nx_aknn, gt_aknn[np.isfinite(gt_aknn)]
-    ) == True
+    )
 
-    assert np.array_equal(nx_dh, gt_dh) == True
-    assert np.array_equal(nx_cdh, gt_cdh) == True
-    assert np.allclose(nx_dc, gt_dc) == True
+    assert np.array_equal(nx_dh, gt_dh)
+    assert np.array_equal(nx_cdh, gt_cdh)
+    assert np.allclose(nx_dc, gt_dc)
+    assert np.allclose(nx_pr, gt_pr, atol=1e-05)
+    assert np.allclose(nx_hc, gt_hc, atol=1e-03)
+    assert np.allclose(nx_bc, gt_bc)
+
+
+########################################################################
+def get_prop_type(value, key=None):
+    """
+    Performs typing and value conversion for the graph_tool PropertyMap class.
+    If a key is provided, it also ensures the key is in a format that can be
+    used with the PropertyMap. Returns a tuple, (type name, value, key)
+    """
+    if isinstance(key, unicode):
+        # Encode the key as ASCII
+        key = key.encode('ascii', errors='replace')
+
+    # Deal with the value
+    if isinstance(value, bool):
+        tname = 'bool'
+
+    elif isinstance(value, int):
+        tname = 'float'
+        value = float(value)
+
+    elif isinstance(value, float):
+        tname = 'float'
+
+    elif isinstance(value, unicode):
+        tname = 'string'
+        value = value.encode('ascii', errors='replace')
+
+    elif isinstance(value, dict):
+        tname = 'object'
+
+    else:
+        tname = 'string'
+        value = str(value)
+
+    return tname, value, key
+
+
+def nx2gt(nxG):
+    """
+    Converts a networkx graph to a graph-tool graph.
+    """
+    # Phase 0: Create a directed or undirected graph-tool Graph
+    gtG = gt.Graph(directed=nxG.is_directed())
+
+    # Add the Graph properties as "internal properties"
+    for key, value in nxG.graph.items():
+        # Convert the value and key into a type for graph-tool
+        tname, value, key = get_prop_type(value, key)
+
+        prop = gtG.new_graph_property(tname) # Create the PropertyMap
+        gtG.graph_properties[key] = prop     # Set the PropertyMap
+        gtG.graph_properties[key] = value    # Set the actual value
+
+    # Phase 1: Add the vertex and edge property maps
+    # Go through all nodes and edges and add seen properties
+    # Add the node properties first
+    nprops = set() # cache keys to only add properties once
+    for node, data in nxG.nodes_iter(data=True):
+
+        # Go through all the properties if not seen and add them.
+        for key, val in data.items():
+            if key in nprops: continue # Skip properties already added
+
+            # Convert the value and key into a type for graph-tool
+            tname, _, key  = get_prop_type(val, key)
+
+            prop = gtG.new_vertex_property(tname) # Create the PropertyMap
+            gtG.vertex_properties[key] = prop     # Set the PropertyMap
+
+            # Add the key to the already seen properties
+            nprops.add(key)
+
+    # Also add the node id: in NetworkX a node can be any hashable type, but
+    # in graph-tool node are defined as indices. So we capture any strings
+    # in a special PropertyMap called 'id' -- modify as needed!
+    gtG.vertex_properties['id'] = gtG.new_vertex_property('string')
+
+    # Add the edge properties second
+    eprops = set() # cache keys to only add properties once
+    for src, dst, data in nxG.edges_iter(data=True):
+
+        # Go through all the edge properties if not seen and add them.
+        for key, val in data.items():
+            if key in eprops: continue # Skip properties already added
+
+            # Convert the value and key into a type for graph-tool
+            tname, _, key = get_prop_type(val, key)
+
+            prop = gtG.new_edge_property(tname) # Create the PropertyMap
+            gtG.edge_properties[key] = prop     # Set the PropertyMap
+
+            # Add the key to the already seen properties
+            eprops.add(key)
+
+    # Phase 2: Actually add all the nodes and vertices with their properties
+    # Add the nodes
+    vertices = {} # vertex mapping for tracking edges later
+    for node, data in nxG.nodes_iter(data=True):
+
+        # Create the vertex and annotate for our edges later
+        v = gtG.add_vertex()
+        vertices[node] = v
+
+        # Set the vertex properties, not forgetting the id property
+        data['id'] = str(node)
+        for key, value in data.items():
+            gtG.vp[key][v] = value # vp is short for vertex_properties
+
+    # Add the edges
+    for src, dst, data in nxG.edges_iter(data=True):
+
+        # Look up the vertex structs from our vertices mapping and add edge.
+        e = gtG.add_edge(vertices[src], vertices[dst])
+
+        # Add the edge properties
+        for key, value in data.items():
+            gtG.ep[key][e] = value # ep is short for edge_properties
+
+    # Done, finally!
+    return gtG
+########################################################################

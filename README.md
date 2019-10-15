@@ -16,11 +16,13 @@ rm get-pip.py
 ## Install python packages
 I recommend creating a new python environment to install all packages required for both projects. This way you will protect both the python's global environment and the environment needed to develop this project. To do this run:
 ```bash
+brew install graph-tool
 pip3 install virtualenv
 cd <path-to-crc-project-folder>
 virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
+echo "/usr/local/Cellar/graph-tool/2.29_1/lib/python3.7/site-packages" > ./venv/lib/python3.7/site-packages/graph-tool.pth
 deactivate
 ```
 
