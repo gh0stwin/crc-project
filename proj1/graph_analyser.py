@@ -12,7 +12,10 @@ def graph_analyser(min_vertices, max_vertices, step, samples, print_header=False
     if print_header:
         graph_header(metrics)
 
+    metrics.close()
+
     for vertices in range(min_vertices, max_vertices, step):
+        metrics = open('./results/metrics.out', 'a')
         vert_dep_metrics = open(
             './results/' + str(vertices) + '-vertices-metrics.out', 
             'a'
@@ -51,8 +54,7 @@ def graph_analyser(min_vertices, max_vertices, step, samples, print_header=False
             )
 
         vert_dep_metrics.close()
-
-    metrics.close()
+        metrics.close()
 
 def compute_all_metrics(g, g_name, g_file, v_file):
     g_file.write(g_name)
@@ -63,21 +65,21 @@ def compute_all_metrics(g, g_name, g_file, v_file):
 
 def graph_header(f):
     f.write(
-        'Average Degree,Max Degree,Variance,Average Path Length,' + 
-        'Pseudo Diameter,Global Clustering Coefficient,' + 
-        'Local Clustering Coefficient,Giant Component Ratio,' + 
-        'Powerlaw Parameter alpha,Powerlaw Parameter xmin,' +
-        'Powerlaw Parameter xmax,Cumulative Powerlaw Parameter alpha,' +
+        ',Number of Nodes,Number of Edges,Density,Average Degree,' + 
+        'Max Degree,Variance,Average Path Length,Pseudo Diameter,' + 
+        'Global Clustering Coefficient,Local Clustering Coefficient,' + 
+        'Giant Component Ratio,Powerlaw Parameter alpha,' +
+        'Powerlaw Parameter xmin,Powerlaw Parameter xmax,' + 
+        'Cumulative Powerlaw Parameter alpha,' + 
         'Cumulative Powerlaw Parameter xmin,' + 
-        'Cumulative Powerlaw Parameter xmax,Degree Assortativity,' + 
-        'Average Neighbour Correlation\n'
+        'Cumulative Powerlaw Parameter xmax,Degree Assortativity\n'
     )
 
 def vertices_header(f):
     f.write(
         ',Degree Centrality,Page Rank,Harmonic Centrality,' + 
-        'Betweenness Centrality,Degree Distribution,' + 
-        'Cumulative Degree Distribution\n'
+        'Betweenness Centrality,Average Neighbour Correlation,' + 
+        'K Core,Local Culstering Coefficient Distribution\n'
     )
 
 def graph_metrics(g, f):
@@ -135,12 +137,12 @@ def vertices_metrics(g, f, first_el):
     f.write(first_el + '-dc,')
 
     # Degree Centrality
-    np.savetxt(f, degree_centrality(g), delimiter=',', newline=',')
-    f.write(first_el + '-dcn')
+    np.savetxt(f, degree_centrality(g), fmt='%i', delimiter=',', newline=',')
+    f.write('\n' + first_el + '-dcn')
 
-    # Degree Centrality Normalized
-    np.savetxt(f, degree_centrality_normalized(g), newline=',')
-    f.write('\n' + first_el + '-pr,')
+    # # Degree Centrality Normalized
+    # np.savetxt(f, degree_centrality_normalized(g), newline=',')
+    # f.write('\n' + first_el + '-pr,')
 
     # Page Rank
     np.savetxt(f, page_rank(g), delimiter=',', newline=',')
@@ -158,17 +160,17 @@ def vertices_metrics(g, f, first_el):
     np.savetxt(f, avg_neighbor_corr(g), delimiter=',', newline=',')
     f.write('\n' + first_el + '-dd,')
 
-    # Degree Distribution
-    np.savetxt(f, degree_dist(g), delimiter=',', newline=',')
-    f.write('\n' + first_el + '-cdd,')
+    # # Degree Distribution
+    # np.savetxt(f, degree_dist(g), delimiter=',', newline=',')
+    # f.write('\n' + first_el + '-cdd,')
 
-    # Cumulative Degree Distribution
-    np.savetxt(f, cum_degree_dist(g), delimiter=',', newline=',')
-    f.write('\n' + first_el + '-kcore')
+    # # Cumulative Degree Distribution
+    # np.savetxt(f, cum_degree_dist(g), delimiter=',', newline=',')
+    # f.write('\n' + first_el + '-kcore')
 
     # K-Core
     np.savetxt(f, kcore(g), delimiter=',', newline=',')
-    f.write('\n' + first_el + '-lccd')
+    f.write('\n' + first_el + '-lccd,')
 
     # Local Culstering Coefficient Distribution
     np.savetxt(f, lcl_clus_coef_dist(g), delimiter=',', newline=',')
@@ -178,9 +180,9 @@ def write_in_csv_file(f, value, first=False):
     f.write((',' if not first else '') + str(value))
 
 if __name__ == '__main__':
-    graph_analyser(100, 1000, 100, 40, True)
-    graph_analyser(1000, 10000, 1000, 40)
-    graph_analyser(10000, 100000, 10000, 40)
+    graph_analyser(100, 1000, 100, 5, True)
+    # graph_analyser(1000, 10000, 1000, 40)
+    # graph_analyser(10000, 100000, 10000, 40)
 
     # g = read_edgelist('/Users/ghosw/Downloads/bio-CE-CX.edges', data=(('weight',float),))
     # write_gml(g, '/Users/ghosw/Downloads/bio-CE-CX.gml')

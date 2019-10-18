@@ -55,14 +55,18 @@ def degree_centrality(g):
 
 def degree_dist(g):
     deg_array = g.get_total_degrees(g.get_vertices())
-    max_val = np.max(deg_array)
-    
+    n_nodes_with_degree = np.zeros(np.max(deg_array))
+
+    for value in deg_array:
+        n_nodes_with_degree[value] += 1
+
+    return n_nodes_with_degree
 
 def degree_centrality_normalized(g):
     return degree_centrality(g) / (g.num_vertices() - 1)
 
-def degree_dist(g):
-    return gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
+# def degree_dist(g):
+#     return gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
 
 def degree_ratio_of_giant_comp(g):
     return gt.extract_largest_component(g).num_vertices() / \
