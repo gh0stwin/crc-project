@@ -1,15 +1,16 @@
 import gc
 import graph_tool.all as gt
 import graph_tool.stats as gt_stats
-from scipy.stats import poisson
 
 from gt_metrics import *
 
 P = 0.15
 
-def graph_analyser(min_vertices, max_vertices, step, samples):
+def graph_analyser(min_vertices, max_vertices, step, samples, print_header=False):
     metrics = open('./results/metrics.out', 'a')
-    graph_header(metrics)
+
+    if print_header:
+        graph_header(metrics)
 
     for vertices in range(min_vertices, max_vertices, step):
         vert_dep_metrics = open(
@@ -22,14 +23,14 @@ def graph_analyser(min_vertices, max_vertices, step, samples):
 
         for i in range(samples):
             print('sample: ' + str(i))
-            # print('er')
-            # g_name = 'er-' + str(vertices) + '-' + str(i)
-            # compute_all_metrics(
-            #     erdos_renyi_network(vertices, P),
-            #     g_name,
-            #     metrics, 
-            #     vert_dep_metrics
-            # )
+            print('er')
+            g_name = 'er-' + str(vertices) + '-' + str(i)
+            compute_all_metrics(
+                erdos_renyi_network(vertices, P),
+                g_name,
+                metrics, 
+                vert_dep_metrics
+            )
 
             print('ba')
             g_name = 'ba-' + str(vertices) + '-' + str(i)
@@ -74,12 +75,21 @@ def graph_header(f):
 
 def vertices_header(f):
     f.write(
-        'Degree Centrality,Page Rank,Harmonic Centrality,' + 
+        ',Degree Centrality,Page Rank,Harmonic Centrality,' + 
         'Betweenness Centrality,Degree Distribution,' + 
         'Cumulative Degree Distribution\n'
     )
 
 def graph_metrics(g, f):
+    # Number of Nodes
+    write_in_csv_file(f, g.num_vertices())
+
+    # Number of Edges
+    write_in_csv_file(f, g.num_edges())
+
+    # Density
+    write_in_csv_file(f, density(g))
+
     # Average Degree
     write_in_csv_file(f, avg_degree(g))
 
@@ -122,9 +132,14 @@ def graph_metrics(g, f):
     write_in_csv_file(f, '\n')
 
 def vertices_metrics(g, f, first_el):
-    # Degree Centrality
     f.write(first_el + '-dc,')
-    np.savetxt(f, degree_centrality(g), newline=',')
+
+    # Degree Centrality
+    np.savetxt(f, degree_centrality(g), delimiter=',', newline=',')
+    f.write(first_el + '-dcn')
+
+    # Degree Centrality Normalized
+    np.savetxt(f, degree_centrality_normalized(g), newline=',')
     f.write('\n' + first_el + '-pr,')
 
     # Page Rank
@@ -149,10 +164,26 @@ def vertices_metrics(g, f, first_el):
 
     # Cumulative Degree Distribution
     np.savetxt(f, cum_degree_dist(g), delimiter=',', newline=',')
+    f.write('\n' + first_el + '-kcore')
+
+    # K-Core
+    np.savetxt(f, kcore(g), delimiter=',', newline=',')
+    f.write('\n' + first_el + '-lccd')
+
+    # Local Culstering Coefficient Distribution
+    np.savetxt(f, lcl_clus_coef_dist(g), delimiter=',', newline=',')
     f.write('\n')
 
 def write_in_csv_file(f, value, first=False):
     f.write((',' if not first else '') + str(value))
 
 if __name__ == '__main__':
-    graph_analyser(100, 1001, 100, 40)
+    graph_analyser(100, 1000, 100, 40, True)
+    graph_analyser(1000, 10000, 1000, 40)
+    graph_analyser(10000, 100000, 10000, 40)
+
+    # g = read_edgelist('/Users/ghosw/Downloads/bio-CE-CX.edges', data=(('weight',float),))
+    # write_gml(g, '/Users/ghosw/Downloads/bio-CE-CX.gml')
+    # g = gt.load_graph('/Users/ghosw/Downloads/bio-CE-CX.gml')
+    # f = open('./results/mammalia-metrics.out', 'w+')
+    # graph_metrics(g, f)

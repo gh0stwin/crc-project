@@ -10,6 +10,7 @@ from networkx.algorithms.link_analysis.pagerank_alg import pagerank
 from networkx.algorithms.shortest_paths.generic import average_shortest_path_length
 from networkx.classes.function import degree_histogram
 from networkx.generators.random_graphs import barabasi_albert_graph, erdos_renyi_graph
+from networkx.readwrite.edgelist import read_edgelist
 from networkx.readwrite.gml import write_gml
 import numpy as np
 import powerlaw as pl
@@ -44,14 +45,21 @@ def cum_deg_powerlaw_low_high_sat(g):
     )
 
     return (
-        pl_fit.power_law.alpha, 
-        pl_fit.power_law.xmin, 
-        pl_fit.power_law.xmax
+        pl_fit.alpha, 
+        pl_fit.xmin, 
+        pl_fit.xmax
     )
 
 def degree_centrality(g):
-    return g.get_total_degrees(g.get_vertices()) / \
-        (g.num_vertices() - 1)
+    return g.get_total_degrees(g.get_vertices())
+
+def degree_dist(g):
+    deg_array = g.get_total_degrees(g.get_vertices())
+    max_val = np.max(deg_array)
+    
+
+def degree_centrality_normalized(g):
+    return degree_centrality(g) / (g.num_vertices() - 1)
 
 def degree_dist(g):
     return gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
@@ -67,10 +75,13 @@ def deg_powerlaw_low_high_sat(g):
     )
 
     return (
-        pl_fit.power_law.alpha, 
-        pl_fit.power_law.xmin, 
-        pl_fit.power_law.xmax
+        pl_fit.alpha, 
+        pl_fit.xmin, 
+        pl_fit.xmax
     )
+
+def density(g):
+    return g.num_edges() / (g.num_vertices() ** 2 - g.num_vertices())
 
 def dgm_network(n, seed=None):
     if seed:
@@ -106,8 +117,14 @@ def gb_clus_coef(g):
 def harmonic_centrality(g):
     return gt.closeness(g, harmonic=True).get_array()
 
+def kcore(g):
+    return gt_stats.vertex_hist(g, gt.kcore_decomposition(g))[0]
+
 def lcl_clus_coef(g):
     return gt_stats.vertex_average(g, gt.local_clustering(g))[0]
+
+def lcl_clus_coef_dist(g):
+    return gt.local_clustering(g).get_array()
 
 def max_degree(g):
     return gt_stats.vertex_hist(g, 'total')[1][-2]
