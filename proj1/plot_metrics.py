@@ -2,6 +2,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+DC = 'Degree Centrality'
+
+def plot_dists(models, title='a'):
+    for model_name in models.keys():
+        for metric in models.keys():
+            if metric == DC:
+                continue
+
+            plt.plot(models[model_name][DC], models[model_name][metric], '.')
+            plt.title(title)
+            
+        plt.savefig('./plots/' + title + '.png')
+        plt.show()
+
 def plot_avg_metrics(models):
     for model_name in models.keys():
         for metric in models[model_name].keys():
@@ -32,57 +46,116 @@ def avg_metrics(models):
 
     return graph_models
 
-def get_dist_metrics(f_name, metric_idxs):
-    f = open(f_name, 'r')
-    metrics = get_metric_names(f.readline(), metric_idxs)
-    models = {}
-    cont = True
+def avg_dist_samples(models):
+    models_per_n = {}
+    group_samples = {}
 
-    while cont:
-        models_aux, cont = dist_samples(f, 8, metrics, metric_idxs)
-        models.update(models_aux)
+    for sample_name in models.keys():
+        model_name = sample_name.rsplit('-', 1)[0]
+
+        if model_name not in group_samples:
+            group_samples[model_name] = []
+
+        group_samples[model_name].append(models[sample_name])
+
+    for model_name in group_samples.keys():
+        models_per_n[model_name] = avg_dists(
+            group_samples[model_name], 
+            DC
+        )
+
+    return models_per_n
+
+def avg_dists(sample_models, dc_dist):
+    n_model = {}
+    max_val = -1
+
+    for sample_model in sample_models:
+        aux_val = np.max(sample_model[dc_dist])
+
+        if aux_val > max_val:
+            max_val = aux_val
+
+    n_model['#'] = np.zeros(max_val + 1)
+
+    for sample_model in sample_models:
+        np.add.at(n_model['#'], sample_model[dc_dist], 1)
+
+        for i in range(max_val + 1):
+            k_val_idxs = np.where(sample_model[dc_dist] == i)[0]
+            
+            if k_val_idxs.size == 0:
+                continue
+
+            for dist in sample_model.keys():
+                if dist == dc_dist:
+                    continue
+                elif dist not in n_model:
+                    n_model[dist] = np.zeros(max_val + 1)
+
+                n_model[dist][i] += np.sum(sample_model[dist][k_val_idxs])
+
+    for dist in n_model.keys():
+        if dist == '#':
+            continue
+
+        n_model[dist] = np.divide(
+            n_model[dist], 
+            n_model['#'], 
+            out=np.zeros_like(n_model[dist]),
+            where= n_model['#'] != 0
+        )
+    return n_model
+
+def get_dist_metrics(f_names, metric_idxs):
+    models = {}
+
+    for f_name in f_names:
+        f = open(f_name, 'r')
+        metrics = get_metric_names(f.readline(), metric_idxs)
+        models.update(dist_samples(f, metrics, metric_idxs))
 
     return models
 
-def dist_samples(f, n_metrics, metric_names, metric_idxs):
+def dist_samples(f, metric_names, metric_idxs):
     models = {}
     line = f.readline()
-    first_model = None
-    n = None
-    metric_idx = 0
-    pointer = None
+    prev_model = None
+    file_line_idx = 1
 
     while line:
-        cells = line.split(',', 1)
-        model, new_n = cells[0].split('-')[0:2]
-        model = model + '-' + new_n
+        model, values = line.split(',', 1)
+        model = model.rsplit('-', 1)[0]
 
-        if n == None:
-            n = new_n
-        elif new_n != n:
-            f.seek(pointer)
-            break
+        if prev_model is None:
+            prev_model = model
+        elif prev_model != model:
+            prev_model = model
+            file_line_idx = 1
 
         if model not in models:
-            models[model] = {name:[] for name in metric_names}
+            models[model] = {}
 
-        idx = None
         try:
-            idx = metric_idxs.index(metric_idx)
+            metric_idx = metric_idxs.index(file_line_idx)
+            models[model][metric_names[metric_idx]] = np.array(
+                [float(val) for val in values.split(',') if is_float(val)],
+                dtype=np.float if metric_names[metric_idx] != DC else np.int
+            )
         except ValueError:
             pass
 
-        if idx is not None:
-            models[model][metric_names[idx]] = np.array(cells[1].split(','))
-
-        pointer = f.tell()
         line = f.readline()
-        metric_idx += 1
+        file_line_idx += 1
 
-        if metric_idx == n_metrics - 1:
-            metric_idx = 0
+    return models
 
-    return models, line
+def is_float(val):
+    try:
+        float(val)
+        return True
+    except ValueError:
+        return False
 
 def get_metrics_by_graph_and_n(f_name, cols):
     f = open(f_name, 'r')
@@ -134,4 +207,11 @@ def avg_samples(f, col_names, col_idxs):
 
     return models, line
 
-# variance, degree dist, avg degree, avg gb cc, avg lcl cc, assortativity
+if __name__ == '__main__':
+    # variance, avg degree, avg gb cc, avg lcl cc, assortativity
+    models = get_metrics_by_graph_and_n(
+        './results/metrics.out', 
+        [4, 6, 9, 10, 18]
+    )
+
+    #degree dist

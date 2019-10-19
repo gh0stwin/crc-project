@@ -87,7 +87,7 @@ def deg_powerlaw_low_high_sat(g):
 def density(g):
     return g.num_edges() / (g.num_vertices() ** 2 - g.num_vertices())
 
-def dgm_network(n, seed=None):
+def dms_network(n, seed=None):
     if seed:
         rnd.seed(seed)
 
