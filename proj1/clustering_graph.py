@@ -72,16 +72,7 @@ def main():
     axes = plt.subplot()
 
     # DMS
-    axes.loglog(degreesDMS, dms_avg_ck, 'ro', color='blue', markersize=3, label="DMS")
-    yfit = lambda x: np.exp(trendpolyBA(np.log(x)))
-    y = yfit(degreesBA)
-
-    X = degreesBA - degreesBA.mean()
-    Y = y - y.mean()
-
-    slope = (X.dot(Y)) / (X.dot(X))
-    print('BA slope ' + str(slope))
-    plt.loglog(degreesBA, y, color="black", linewidth=1, label="BA line fit")
+    axes.loglog(degreesDMS, dms_avg_ck, 'o', mfc='none', color='black', markersize=3, label="DMS")
 
     #BA all values
     if args.show_all_BA_values:
@@ -91,13 +82,24 @@ def main():
         for j in range(ba.shape[1]):
             for i in range(ba.shape[0]):
                 if ba[i,j] != 0:
-                    x.append(j+1)
+                    x.append(j)
                     y.append(ba[i,j])
 
-        plt.loglog(x, y, 'ro', color='black', markersize=5, 
+        plt.loglog(x, y, 'o', color='blue', markersize=3, 
             label="all BA clustering coefficient values")
+
     # BA
-    axes.loglog(degreesBA, ba_avg_ck, 'ro', color='red', markersize=3, label="BA")
+    axes.loglog(degreesBA, ba_avg_ck, 'o', color='black', markersize=3, label="BA")
+    
+    yfit = lambda x: np.exp(trendpolyBA(np.log(x)))
+    y = yfit(degreesBA)
+
+    X = degreesBA - degreesBA.mean()
+    Y = y - y.mean()
+
+    slope = (X.dot(Y)) / (X.dot(X))
+    print('BA slope ' + str(slope))
+    plt.loglog(degreesBA, y, color="red", linestyle='-', linewidth=1, label="BA line fit")
 
     axes.legend()
     plt.xlabel(r"$k$")
