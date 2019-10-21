@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 import os
+from scipy.optimize import curve_fit
+
 
 def main():
     # Deal with arguments
@@ -69,10 +71,10 @@ def main():
     trendBA = np.polyfit(np.log(degreesBA), np.log(ba_avg_ck),1)
     trendpolyBA = np.poly1d(trendBA) 
 
-    axes = plt.subplot()
+    fig, axes = plt.subplots(figsize=(3,3))
 
     # DMS
-    axes.loglog(degreesDMS, dms_avg_ck, 'o', mfc='none', color='black', markersize=3, label="DMS")
+    axes.loglog(degreesDMS, dms_avg_ck, 'o', mfc='none', color='black', markersize=2, label="DMS")
 
     #BA all values
     if args.show_all_BA_values:
@@ -85,12 +87,12 @@ def main():
                     x.append(j)
                     y.append(ba[i,j])
 
-        plt.loglog(x, y, 'o', color='blue', markersize=3, 
+        plt.loglog(x, y, 'o', color='blue', markersize=2, 
             label="all BA clustering coefficient values")
 
-    # BA
-    axes.loglog(degreesBA, ba_avg_ck, 'o', color='black', markersize=3, label="BA")
+    axes.loglog(degreesBA, ba_avg_ck, 'o', color='black', markersize=2, label="BA")
     
+    # BA
     yfit = lambda x: np.exp(trendpolyBA(np.log(x)))
     y = yfit(degreesBA)
 
@@ -99,11 +101,19 @@ def main():
 
     slope = (X.dot(Y)) / (X.dot(X))
     print('BA slope ' + str(slope))
-    plt.loglog(degreesBA, y, color="red", linestyle='-', linewidth=1, label="BA line fit")
+    
+    # DMS
+    # Powerlaw 
+    def f(x, N, a):
+        return N*np.power(x,-a)
 
-    axes.legend()
+    popt, pcov = curve_fit(f, degreesDMS, dms_avg_ck)
+    print('DMS: %1.2fk^-%1.2f' %(popt[0], popt[1]))
+
+    plt.loglog(degreesBA, y, color="red", linestyle='-', linewidth=2, label="BA line fit")
     plt.xlabel(r"$k$")
     plt.ylabel(r"$<C_k>$")
+    plt.tight_layout()
     plt.show()
 
 if __name__ == '__main__':

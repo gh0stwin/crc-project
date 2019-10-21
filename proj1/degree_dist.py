@@ -73,29 +73,29 @@ def f(x, N, a):
 def f2(x, N, a):
     return N*np.power(x,-3.0)
 
-axes = plt.subplot()
+fig, axes = plt.subplots(figsize=(3,3))
 
 # Plot each samples distribution of BA
 for k in range(len(degreesBA)):
     if k == len(degreesBA) - 1:
-        axes.loglog(degreesBA[k], ba_avg_dist[k], 'o', color='black', markersize=3, label="BA distribution")
+        axes.loglog(degreesBA[k], ba_avg_dist[k], 'o', color='black', markersize=2, label="BA distribution")
     else:
-        axes.loglog(degreesBA[k], ba_avg_dist[k], 'o', color='black', markersize=3)
+        axes.loglog(degreesBA[k], ba_avg_dist[k], 'o', color='black', markersize=2)
 
 # Plot each samples distribution of DMS
 for k in range(len(degreesDMS)):
     if k == len(degreesDMS) - 1:
-        axes.loglog(degreesDMS[k], dms_avg_dist[k], 'o', mfc='none', color='black', markersize=3, label="DMS distribution")
+        axes.loglog(degreesDMS[k], dms_avg_dist[k], 'o', mfc='none', color='black', markersize=2, label="DMS distribution")
     else:
-        axes.loglog(degreesDMS[k], dms_avg_dist[k], 'o', mfc='none', color='black', markersize=3)
+        axes.loglog(degreesDMS[k], dms_avg_dist[k], 'o', mfc='none', color='black', markersize=2)
 
 # get mean of distributions for fitting powerlaw
 degreesBA = []
 ba_avg_dist = []
 degreesDMS = []
 dms_avg_dist = []
-low_cutoff = 0#20
-high_cutoff = ba.shape[1]#int(N/1000)
+low_cutoff = 20
+high_cutoff = int(N/1000)
 # Cutoff values found by hand for N=10^5
 for j in range(low_cutoff, high_cutoff):#ba.shape[1]):
     auxBA = []
@@ -116,14 +116,14 @@ for j in range(low_cutoff, high_cutoff):#ba.shape[1]):
     
 # fit BA powerlaw
 popt, pcov = curve_fit(f, degreesBA, ba_avg_dist)
-plt.loglog(range(2,210), f(range(2,210), *popt), 'red', linestyle='-', linewidth="2",
+axes.loglog(range(2,110), f(range(2,110), *popt), 'red', linestyle='-', linewidth="1",
     label="BA fit, %1.2f*k^-%1.2f" % (popt[0],popt[1]))
 # power of BA
 # print(popt[1])
 
 # fit DMS powerlaw
 popt, pcov = curve_fit(f, degreesDMS, dms_avg_dist)
-plt.loglog(range(2,200), f(range(2,200), *popt), 'red', linestyle='--', linewidth="2", 
+axes.loglog(range(2,110), f(range(2,110), *popt), 'red', linestyle='--', linewidth="1", 
     label="DMS fit, %1.2f*k^-%1.2f" % (popt[0],popt[1]))
 # power of DMS
 # print(popt[1])
@@ -132,9 +132,9 @@ plt.loglog(range(2,200), f(range(2,200), *popt), 'red', linestyle='--', linewidt
 #popt, pcov = curve_fit(f2, degreesBA, ba_avg_dist)
 #plt.loglog(degreesBA, f2(degreesBA, *popt), 'cyan', linewidth="2", label="" + "{:1.2f}".format(popt[0]) + "*k^-3")
 
-axes.legend()
 plt.xlabel(r"$k$")
 plt.ylabel(r"$P_k$")
+plt.tight_layout()
 plt.show()
 
 

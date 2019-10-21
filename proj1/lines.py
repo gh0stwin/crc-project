@@ -1,11 +1,11 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-axes = plt.subplot()
 color = ["b","g","r","c","m","y"]
 N_values = [10, 10**2, 10**3, 10**4, 10**5, 10**6]
 N_text = [r"$10$",r"$10^2$",r"$10^3$",r"$10^4$",r"$10^5$",r"$10^6$"]
 N_print = ["10","10^2","10^3","10^4","10^5","10^6"]
+f, axes = plt.subplots(figsize=(3,3))
 for c in range(len(N_values)):
     N = N_values[c]
     ba = np.loadtxt(
@@ -60,7 +60,7 @@ for c in range(len(N_values)):
     slope = (X.dot(Y)) / (X.dot(X))
     print(N_print[c] + ' slopes:')
     print('\tBA:  ' + str(slope))
-    plt.loglog(degreesBA, y, linewidth=2, label="BA line fit for " + N_text[c], color=color[c])
+    axes.loglog(degreesBA, y, linewidth=1, label="BA line fit for " + N_text[c], color=color[c])
     #if c == len(N_values)-1:
     #    axes.loglog(degreesDMS, dms_avg_ck, 'ro', color='blue', markersize=3, label="DMS 10^6")
     #print(str(N) + ' done')
@@ -81,10 +81,11 @@ for c in range(len(N_values)):
 
     slope = (X.dot(Y)) / (X.dot(X))
     print('\tDMS: ' + str(slope))
-    plt.loglog(degreesDMS, y, '--', linewidth=2, label="DMS line fit for " + N_text[c], color=color[c])
+    axes.loglog(degreesDMS, y, '--', linewidth=1, label="DMS line fit for " + N_text[c], color=color[c])
     
 
-axes.legend(loc="upper right")
+#axes.legend(loc="upper right")
 plt.xlabel(r"$k$")
 plt.ylabel(r"$<C_k>$")
+plt.tight_layout()
 plt.show()
