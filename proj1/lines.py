@@ -1,5 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt
+import os
 
 color = ["b","g","r","c","m","y"]
 N_values = [10, 10**2, 10**3, 10**4, 10**5, 10**6]
@@ -8,6 +9,11 @@ N_print = ["10","10^2","10^3","10^4","10^5","10^6"]
 f, axes = plt.subplots(figsize=(3,3))
 for c in range(len(N_values)):
     N = N_values[c]
+    ba_file = './results/clustering_coefficient/' + str(N) + '-ba.out'
+    dms_file = './results/clustering_coefficient/' + str(N) + '-dms.out'
+    if not os.path.isfile(ba_file) or not os.path.isfile(dms_file):
+        print('Files for N=' + str(N) + ' do not exist' )
+        exit()
     ba = np.loadtxt(
         './results/clustering_coefficient/' + str(N) + '-ba.out',
         delimiter=',',
