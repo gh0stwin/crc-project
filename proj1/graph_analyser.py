@@ -1,6 +1,7 @@
 import gc
 import graph_tool.all as gt
 import graph_tool.stats as gt_stats
+import sys
 
 from gt_metrics import *
 
@@ -59,83 +60,76 @@ def graph_analyser(min_vertices, max_vertices, step, samples, print_header=False
 def compute_all_metrics(g, g_name, g_file, v_file):
     g_file.write(g_name)
     graph_metrics(g, g_file)
-    vertices_metrics(g, v_file, g_name)
+    # vertices_metrics(g, v_file, g_name)
     g = None
     gc.collect()
 
 def graph_header(f):
-    # f.write(
-    #     ',Number of Nodes,Number of Edges,Density,Average Degree,' + 
-    #     'Max Degree,Variance,Average Path Length,Pseudo Diameter,' + 
-    #     'Global Clustering Coefficient,Local Clustering Coefficient,' + 
-    #     'Giant Component Ratio,Powerlaw Parameter alpha,' +
-    #     'Powerlaw Parameter xmin,Powerlaw Parameter xmax,' + 
-    #     'Cumulative Powerlaw Parameter alpha,' + 
-    #     'Cumulative Powerlaw Parameter xmin,' + 
-    #     'Cumulative Powerlaw Parameter xmax,Degree Assortativity\n'
-    # )
     f.write(
-        ',Average Degree,Variance,Global Clustering Coefficient,' + 
-        'Local Clustering Coefficient,Degree Assortativity\n'
+        ',Number of Nodes,Number of Edges,Density,Average Degree,' + 
+        'Max Degree,Variance,Average Path Length,Pseudo Diameter,' + 
+        'Global Clustering Coefficient,Local Clustering Coefficient,' + 
+        'Giant Component Ratio,Powerlaw Parameter alpha,' +
+        'Powerlaw Parameter xmin,Powerlaw Parameter xmax,' + 
+        'Cumulative Powerlaw Parameter alpha,' + 
+        'Cumulative Powerlaw Parameter xmin,' + 
+        'Cumulative Powerlaw Parameter xmax,Degree Assortativity\n'
     )
 
 def vertices_header(f):
-    # f.write(
-    #     ',Degree Centrality,Page Rank,Harmonic Centrality,' + 
-    #     'Betweenness Centrality,Average Neighbour Correlation,' + 
-    #     'K Core,Local Culstering Coefficient Distribution\n'
-    # )
     f.write(
-        ',Degree Centrality,Local Culstering Coefficient Distribution\n'
+        ',Degree Centrality,Page Rank,Harmonic Centrality,' + 
+        'Betweenness Centrality,Average Neighbour Correlation,' + 
+        'K Core,Local Culstering Coefficient Distribution\n'
     )
 
 def graph_metrics(g, f):
     # # Number of Nodes
-    # write_in_csv_file(f, g.num_vertices())
+    write_in_csv_file(f, g.num_vertices())
 
     # # Number of Edges
-    # write_in_csv_file(f, g.num_edges())
+    write_in_csv_file(f, g.num_edges())
 
     # # Density
-    # write_in_csv_file(f, density(g))
+    write_in_csv_file(f, density(g))
 
-    # Average Degree
+    # # Average Degree
     write_in_csv_file(f, avg_degree(g))
 
     # # Max Degree
-    # write_in_csv_file(f, max_degree(g))
+    write_in_csv_file(f, max_degree(g))
 
     # Variance
     write_in_csv_file(f, variance(g))
 
     # # Average Path Length
-    # write_in_csv_file(f, avg_path_length(g))
+    write_in_csv_file(f, avg_path_length(g))
 
     # # Pseudo Diameter
-    # write_in_csv_file(f, diameter_approx(g))
+    write_in_csv_file(f, diameter_approx(g))
 
-    # Global Clustering Coefficient
+    # # Global Clustering Coefficient
     write_in_csv_file(f, gb_clus_coef(g))
 
-    # Local Clustering Coefficient
+    # # Local Clustering Coefficient
     write_in_csv_file(f, lcl_clus_coef(g))
 
     # # Giant Component Ratio
-    # write_in_csv_file(f, degree_ratio_of_giant_comp(g))
+    write_in_csv_file(f, degree_ratio_of_giant_comp(g))
 
     # # Powerlaw Parameters
-    # d = deg_powerlaw_low_high_sat(g)
-    # write_in_csv_file(f, d[0])
-    # write_in_csv_file(f, d[1])
-    # write_in_csv_file(f, d[2])
+    d = deg_powerlaw_low_high_sat(g)
+    write_in_csv_file(f, d[0])
+    write_in_csv_file(f, d[1])
+    write_in_csv_file(f, d[2])
 
     # # Cumulative Powerlaw Parameters
-    # d = cum_deg_powerlaw_low_high_sat(g)
-    # write_in_csv_file(f, d[0])
-    # write_in_csv_file(f, d[1])
-    # write_in_csv_file(f, d[2])
+    d = cum_deg_powerlaw_low_high_sat(g)
+    write_in_csv_file(f, d[0])
+    write_in_csv_file(f, d[1])
+    write_in_csv_file(f, d[2])
 
-    # Degree Assortativity
+    # # Degree Assortativity
     write_in_csv_file(f, assortativity(g))
 
     write_in_csv_file(f, '\n')
@@ -145,10 +139,10 @@ def vertices_metrics(g, f, first_el):
 
     # Degree Centrality
     np.savetxt(f, degree_centrality(g), fmt='%i', delimiter=',', newline=',')
-    # f.write('\n' + first_el + '-dcn,')
+    f.write('\n' + first_el + '-dcn,')
 
     # # Degree Centrality Normalized
-    # np.savetxt(f, degree_centrality_normalized(g), newline=',')
+    np.savetxt(f, degree_centrality_normalized(g), newline=',')
     f.write('\n' + first_el + '-pr,')
 
     # Page Rank
@@ -168,12 +162,12 @@ def vertices_metrics(g, f, first_el):
     f.write('\n' + first_el + '-dd,')
 
     # # Degree Distribution
-    # np.savetxt(f, degree_dist(g), delimiter=',', newline=',')
-    # f.write('\n' + first_el + '-cdd,')
+    np.savetxt(f, degree_dist(g), delimiter=',', newline=',')
+    f.write('\n' + first_el + '-cdd,')
 
     # # Cumulative Degree Distribution
-    # np.savetxt(f, cum_degree_dist(g), delimiter=',', newline=',')
-    # f.write('\n' + first_el + '-kcore')
+    np.savetxt(f, cum_degree_dist(g), delimiter=',', newline=',')
+    f.write('\n' + first_el + '-kcore')
 
     # K-Core
     np.savetxt(f, kcore(g), delimiter=',', newline=',')
@@ -187,12 +181,9 @@ def write_in_csv_file(f, value, first=False):
     f.write((',' if not first else '') + str(value))
 
 if __name__ == '__main__':
-    graph_analyser(100, 1000, 100, 40, True)
-    graph_analyser(1000, 10000, 1000, 40)
-    graph_analyser(10000, 100000, 10000, 40)
-
-    # g = read_edgelist('/Users/ghosw/Downloads/bio-CE-CX.edges', data=(('weight',float),))
-    # write_gml(g, '/Users/ghosw/Downloads/bio-CE-CX.gml')
-    # g = gt.load_graph('/Users/ghosw/Downloads/bio-CE-CX.gml')
-    # f = open('./results/mammalia-metrics.out', 'w+')
-    # graph_metrics(g, f)
+    graph_analyser(
+        int(sys.argv[1]), 
+        int(sys.argv[2]), 
+        int(sys.argv[3]), 
+        int(sys.argv[4])
+    )

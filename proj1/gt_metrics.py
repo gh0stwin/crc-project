@@ -138,9 +138,9 @@ def page_rank(g):
     return gt.pagerank(g).get_array()
 
 def variance(g):
-    degree_hist = gt_stats.vertex_hist(g, 'total')[0]
+    degree_hist = gt_stats.vertex_hist(g, 'total')[0] / g.num_vertices()
     second_m = np.sum(degree_hist * (np.arange(len(degree_hist)) ** 2))
-    return math.sqrt(second_m - avg_degree(g) ** 2)
+    return second_m - avg_degree(g) ** 2
 
 if __name__ == '__main__':
     nx_g = barabasi_albert_graph(int(1e3), 2)
