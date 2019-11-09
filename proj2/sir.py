@@ -1,59 +1,113 @@
 import networkx as nx
+import networkx.classes
+import networkx.classes.function
 import random as rnd
 
+
+SUSC = 'S'
+INF = 'I'
+REC = 'R'
 
 def sir_simulation(g, beta, seed=None):
     if seed:
         rnd.seed(seed)
-    iters_data = [[len(g) - 1, 1]]
-    nx.classes.function.set_node_attributes(g, 'S', 'state')
-    infected_nodes, num_s_i_edges = first_infect_event(g)
+
+    iter_data = [[len(g) - 1, 1]]
+    nx.classes.function.set_node_attributes(g, SUSC, 'state')
+    infected_node_edges, num_s_i_edges = _first_infect_event(g)
+    infected_nodes = list(infected_node_edges.keys())
+    return _sir_simulation_cycle(
+        g, 
+        beta, 
+        infected_nodes, 
+        infected_node_edges, 
+        num_s_i_edges, 
+        iter_data
+    )
+
+def _sir_simulation_cycle(
+    g, 
+    beta, 
+    infected_nodes, 
+    infected_node_edges, 
+    num_s_i_edges, 
+    iter_data
+):
     while infected_nodes:
-        infected_ratio = beta * num_s_i_edges
-        if rnd.random() < (
-            infected_ratio / (infected_ratio + len(infected_nodes))
-        ):
-            num_s_i_edges = infect_event(g, infected_nodes)
-            iters_data[-1][1] += 1
-            iters_data[-1][0] -= 1
+        inf_r = beta * num_s_i_edges
+
+        if rnd.random() < (inf_r / (inf_r + len(infected_nodes))):
+            iter_data[-1][1] += 1
+            iter_data[-1][0] -= 1
+            num_s_i_edges = _infect_event(
+                g, 
+                infected_nodes, 
+                infected_node_edges, 
+                num_s_i_edges
+            )
         else:
-            num_s_i_edges = recover_event(g, infected_nodes)
-            iters_data[-1][1] -= 1
-        if rnd.random() < 1 / (infected_ratio + len(infected_nodes)):
-            iters_data.append([iters_data[-1][0], iters_data[-1][1]])
+            iter_data[-1][1] -= 1
+            num_s_i_edges = _recover_event(
+                g, 
+                infected_nodes, 
+                infected_node_edges, 
+                num_s_i_edges
+            )
 
-def neighbour_s_i_edges(g, i_node):
+        if rnd.random() < 1 / (inf_r + len(infected_nodes)):
+            iter_data.append([iter_data[-1][0], iter_data[-1][1]])
+
+    return iter_data
+
+def _neighbour_s_i_edges(g, i_node):
     s_i_edges = []
-    for edge in g.edges(i_node):
-        if edge[0] != i_node and edge[0]['label'] == 'S':
-            s_i_edges.append(edge)
-        elif edge[1] != i_node and edge[1]['label'] == 'S':
-            s_i_edges.append(edge)
 
-def first_infect_event(g):
+    for edge in g.edges(i_node):
+        if edge[0]['state'] == SUSC:
+            s_i_edges.append(edge[0])
+        elif edge[1]['state'] == SUSC:
+            s_i_edges.append(edge[1])
+
+    return s_i_edges
+    
+def _rm_s_i_edges_of_new_infected(g, i_node, infected_node_edges):
+    edges_removed = 0
+
+    for neigh in g.neighbors(i_node):
+        if neigh['state'] != INF:
+            continue
+
+        for idx in range(len(infected_node_edges[neigh])):
+            if (infected_node_edges[neigh][idx] == i_node):
+                infected_node_edges[neigh].pop(idx)
+                edges_removed += 1
+
+    return edges_removed
+
+def _first_infect_event(g):
     node_to_infect = rnd.randint(0, len(g) - 1)
-    g.nodes[node_to_infect]['state'] = 'I'
-    s_i_edges = neighbour_s_i_edges(g, node_to_infect)
+    g.nodes[node_to_infect]['state'] = INF
+    s_i_edges = _neighbour_s_i_edges(g, node_to_infect)
     return {node_to_infect: s_i_edges}, len(s_i_edges)
 
-def infect_event(g, infected_nodes):
-    infected_node = infected_nodes[rnd.choice(infected_nodes.keys)]
-    selected_edge_idx = rnd.randint(
-        0, 
-        len(infected_nodes[infected_node]) - 1
-    )
-    s_i_edge = infected_nodes[infected_node][selected_edge_idx]
-    infected_nodes[infected_node].pop(selected_edge_idx)
-    node_to_infect = s_i_edge[0]
-    if s_i_edge[1]['state'] == 'S':
-        node_to_infect = s_i_edge[1]
-    infected_nodes[node_to_infect] = neighbour_s_i_edges(
+def _infect_event(g, infected_nodes, infected_node_edges, n_s_i_edges):
+    infected_node = rnd.choice(infected_nodes)
+    node_to_infect = rnd.choice(infected_node_edges[infected_node])
+    g.nodes[node_to_infect]['state'] = INF
+    infected_nodes.append(node_to_infect)
+    new_s_i_edges = _neighbour_s_i_edges(g, node_to_infect)
+    infected_node_edges[node_to_infect] = new_s_i_edges
+    removed_s_i_edges = _rm_s_i_edges_of_new_infected(
         g, 
-        node_to_infect
+        node_to_infect, 
+        infected_node_edges
     )
-    g.nodes[node_to_infect]['state'] = 'I'
 
-def recover_event(g, infected_nodes):
-    node_to_recover = rnd.choice(infected_nodes.keys())
-    g.nodes[node_to_recover]['state'] = 'R'
-    infected_nodes.pop(node_to_recover, None)
+    return n_s_i_edges - removed_s_i_edges + len(new_s_i_edges)
+
+def _recover_event(g, infected_nodes, infected_node_edges, n_s_i_edges):
+    node_to_recover_idx = rnd.randint(0, len(infected_nodes) - 1)
+    node_to_recover = infected_nodes.pop(node_to_recover_idx)
+    g.nodes[node_to_recover]['state'] = REC
+    n_rem_edges = infected_node_edges.pop(node_to_recover, None)
+    return n_s_i_edges - n_rem_edges
