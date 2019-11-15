@@ -3,7 +3,7 @@ import numpy as np
 
 def modify_deg_dist(g, expected_deg_dist, min_diff=1e-2):
     edges_array = np.array(g.edges)
-    current_deg_dist = sum([d for v, d in g.degree]) / len(g)
+    current_deg_dist = g.size / len(g)
 
     while abs(expected_deg_dist - current_deg_dist) > min_diff:
         change_idx = np.random.randint(0, len(edges_array))
@@ -28,3 +28,4 @@ def compute_array_deg_dist(len_g, array):
 
     for i in nodes_deg:
         nodes_deg[i] = np.count_nonzero(array == i)
+
