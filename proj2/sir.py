@@ -192,30 +192,3 @@ class Sir(object):
                 s_i_edges.append(edge[1])
 
         return s_i_edges
-
-
-# def _max_infected(report):
-#     max_val = -1
-
-#     for it in report:
-#         if it[1] > max_val:
-#             max_val = it[1]
-
-#     return max_val
-
-# if __name__ == '__main__':
-#     print(*sys.argv)
-
-#     sims = []
-#     n = int(sys.argv[1])
-#     m = int(sys.argv[3])
-    
-#     for _ in range(m):
-#         sims.append(sir_simulation(nx.barabasi_albert_graph(n, 2), float(sys.argv[2])))
-    
-#     cum_infected_frac = 0
-
-#     for report in sims:
-#         cum_infected_frac += (n - _max_infected(report)) / n
-
-#     print(cum_infected_frac / m)
