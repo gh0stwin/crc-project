@@ -14,7 +14,7 @@ class SirState(enum.Enum):
 
 class Sir(object):
     def __init__(self, g, beta, f=0, seed=None):
-        if seed:
+        if seed is not None:
             np.random.seed(seed)
 
         self._state = 'state'
@@ -70,23 +70,40 @@ class Sir(object):
         self._vaccinate_before_sim()
         self._iterations_info = []
         aux = self._first_infect_event()
-        self._infected_node_edges, self._num_s_i_edges = *aux
+        self._infected_node_edges, self._num_s_i_edges = aux
         self._infected_nodes = list(self._infected_node_edges.keys())
 
     def _first_infect_event(self):
-        node_to_infect = np.random.randint(0, len(self._g))
-        self._g.nodes[node_to_infect][self._state] = SirState.INFECTED
-        s_i_edges = self._neighbour_s_i_edges(node_to_infect)
-        return {node_to_infect: s_i_edges}, len(s_i_edges)
+        susc_nodes = [
+            node for node, state in nx.get_node_attributes(
+                self._g, self._state
+            ).items() if state == SirState.SUSCEPTIBLE
+        ]
+
+        infected_node_edges, s_i_edges = {}, []
+
+        if len(susc_nodes):
+            node_to_inf = susc_nodes[
+                np.random.randint(0, len(susc_nodes))
+            ]
+
+            self._g.nodes[node_to_inf][self._state] = SirState.INFECTED
+            s_i_edges = self._neighbour_s_i_edges(node_to_inf)
+            infected_node_edges[node_to_inf] = s_i_edges
+
+        return infected_node_edges, len(s_i_edges)
 
     def _vaccinate_before_sim(self):
+        nodes = list(range(len(self._g)))
+
         for _ in range(int(round(len(self._g) * self._f))):
-            node = np.random.randint(0, len(g))
+            idx = np.random.randint(0, len(nodes))
+            node = nodes.pop(idx)
             self._g.nodes[node][self._state] = SirState.VACCINATED
 
     def simulate(self):
         self._initialize_sir_network()
-
+        
         while self._infected_nodes:
             inf_r = self._beta * self._num_s_i_edges
             time_inc_r = 1 / (inf_r + len(self._infected_nodes))
@@ -94,7 +111,7 @@ class Sir(object):
             self._check_new_iteration(time_inc_r)
             self._perform_infection_or_recovery_event(prob_to_infect)
 
-        self._save_simulation()
+        return self._iterations_info
 
     def _check_new_iteration(self, time_inc_ratio):
         if np.random.uniform() < time_inc_ratio:
@@ -116,10 +133,10 @@ class Sir(object):
         infected_node, node_to_infect = self._select_s_i_edge()
         self._g.nodes[node_to_infect][self._state] = SirState.INFECTED
         self._infected_nodes.append(node_to_infect)
-        new_s_i_edges = _neighbour_s_i_edges(node_to_infect)
+        new_s_i_edges = self._neighbour_s_i_edges(node_to_infect)
         self._infected_node_edges[node_to_infect] = new_s_i_edges
-        removed_s_i_edges = _rm_s_i_edges_of_new_infected(
-            node_to_infect, 
+        removed_s_i_edges = self._rm_s_i_edges_of_new_infected(
+            node_to_infect
         )
 
         self._num_s_i_edges += (-removed_s_i_edges + len(new_s_i_edges))
@@ -127,15 +144,15 @@ class Sir(object):
     def _recover_event(self):
         rec_node_idx = np.random.randint(0, len(self._infected_nodes))
         node_to_recover = self._infected_nodes.pop(rec_node_idx)
-        g.nodes[node_to_recover][self._state] = SirState.RECOVERED
+        self._g.nodes[node_to_recover][self._state] = SirState.RECOVERED
         rem_edges = self._infected_node_edges.pop(node_to_recover, None)
         self._num_s_i_edges -= len(rem_edges)
 
     def _rm_s_i_edges_of_new_infected(self, inf_node):
         edges_removed = 0
 
-        for neigh in g.neighbors(inf_node):
-            if g.nodes[neigh][self._state] != SirState.INFECTED:
+        for neigh in self._g.neighbors(inf_node):
+            if self._g.nodes[neigh][self._state] != SirState.INFECTED:
                 continue
 
             inf_node_links = self._infected_node_edges[neigh]
@@ -166,38 +183,39 @@ class Sir(object):
 
     def _neighbour_s_i_edges(self, node):
         s_i_edges = []
+        state = self._state
 
-        for edge in g.edges(node):
-            if g.nodes[edge[0]][self._state] == SirState.SUSCEPTIBLE:
+        for edge in self._g.edges(node):
+            if self._g.nodes[edge[0]][state] == SirState.SUSCEPTIBLE:
                 s_i_edges.append(edge[0])
-            elif g.nodes[edge[1]][self._state] == SirState.SUSCEPTIBLE:
+            elif self._g.nodes[edge[1]][state] == SirState.SUSCEPTIBLE:
                 s_i_edges.append(edge[1])
 
         return s_i_edges
 
 
-def _max_infected(report):
-    max_val = -1
+# def _max_infected(report):
+#     max_val = -1
 
-    for it in report:
-        if it[1] > max_val:
-            max_val = it[1]
+#     for it in report:
+#         if it[1] > max_val:
+#             max_val = it[1]
 
-    return max_val
+#     return max_val
 
-if __name__ == '__main__':
-    print(*sys.argv)
+# if __name__ == '__main__':
+#     print(*sys.argv)
 
-    sims = []
-    n = int(sys.argv[1])
-    m = int(sys.argv[3])
+#     sims = []
+#     n = int(sys.argv[1])
+#     m = int(sys.argv[3])
     
-    for _ in range(m):
-        sims.append(sir_simulation(nx.barabasi_albert_graph(n, 2), float(sys.argv[2])))
+#     for _ in range(m):
+#         sims.append(sir_simulation(nx.barabasi_albert_graph(n, 2), float(sys.argv[2])))
     
-    cum_infected_frac = 0
+#     cum_infected_frac = 0
 
-    for report in sims:
-        cum_infected_frac += (n - _max_infected(report)) / n
+#     for report in sims:
+#         cum_infected_frac += (n - _max_infected(report)) / n
 
-    print(cum_infected_frac / m)
+#     print(cum_infected_frac / m)
