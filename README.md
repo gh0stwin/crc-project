@@ -36,3 +36,9 @@ To desactivate the project's private environment just run:
 ```bash
 deactivate
 ```
+
+# Run Tests
+```bash
+cd proj2
+python -m unittest
+```
