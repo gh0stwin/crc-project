@@ -3,6 +3,7 @@ import math
 import networkx as nx
 import numpy as np
 import random as rnd
+from scipy.special import zeta
 
 
 def barabasi_albert_naive(n, avg_deg, seed=None):
@@ -53,3 +54,63 @@ def _add_edges_with_pref_attach(g, node, m):
         )
 
         g.add_edge(node, to_node)
+
+def configuration_model(n, gamma, max_deg_f=lambda n, g: n, seed=None):
+    if seed:
+        np.random.seed(seed)
+
+    max_deg = max_deg_f(n, gamma)
+    deg_dist = np.zeros(max_deg)
+    expected_degrees = []
+    c = 1 / zeta(gamma)
+
+    for i in range(max_deg):
+        deg_dist[i] = c * ((i + 1) ** -gamma)
+        expected_degrees += [i+1] * int(round(n * deg_dist[i]))
+
+    g = nx.expected_degree_graph(
+        expected_degrees, 
+        seed=seed, 
+        selfloops=False
+    )
+
+    cum_deg_dist = np.cumsum(deg_dist)
+    cum_deg_dist[-1] = 1
+
+    while len(g) < n:
+        rnd = np.random.uniform()
+        i = 0
+
+        while rnd > cum_deg_dist[i]:
+            i += 1
+
+        g.add_node(len(g))
+
+        for _ in range(i):
+            neigh = np.random.randint(0, len(g) - 1)
+
+            while g.degree(neigh) >= max_deg:
+                neigh = np.random.randint(0, len(g) - 1)
+
+            g.add_edge((len(g) - 1, neigh))
+        
+    return g
+
+def dms(n, seed=None):
+    if seed:
+        np.random.seed(seed)
+
+    g = nx.Graph()
+    g.add_nodes_from(range(3))
+    edges = [(0, 1), (1, 2), (2, 0)]
+    g.add_edges_from(edges)
+
+    for _ in range(n - 3):
+        idx = np.random.randint(0, len(edges))
+        new_edges = [(len(g), edges[idx][0]), (len(g), edges[idx][1])]
+        g.add_node(len(g))
+        g.add_edges_from(new_edges)
+        edges += new_edges
+
+    return g
+

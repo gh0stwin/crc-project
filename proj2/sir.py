@@ -21,10 +21,10 @@ class Sir(object):
         self.g = g
         self.beta = beta
         self.f = f
-        self._num_s_i_edges = None
-        self._infected_nodes = None
-        self._infected_node_edges = None
-        self._iterations_info = None
+        self._num_s_i_edges = 0
+        self._infected_nodes = []
+        self._infected_node_edges = {}
+        self._iterations_info = []
 
     @property
     def g(self):
