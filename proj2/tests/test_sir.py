@@ -126,7 +126,7 @@ class TestSir(unittest.TestCase):
             self.assertEqual(self._sir._infected_node_edges, {})
 
     def test_sir_simulate(self):
-        event_manager = self._prepare_simulation_case(1)
+        event_manager = self._prepare_for_simulation(1)
 
         with mock.patch('sir.np.random') as mock_random:
             uniform_returns = [1, 0, 1, 1, 0, 0, 1, 0, 1, 0]
@@ -153,7 +153,7 @@ class TestSir(unittest.TestCase):
 
             self.assertEqual(len(self._sir._iterations_info), 2)
 
-        event_manager = self._prepare_simulation_case(2)
+        event_manager = self._prepare_for_simulation(2)
    
         with mock.patch('sir.np.random') as mock_random:
             uniform_returns = [1, 1, 1, 0, 1, 0, 1, 0]
@@ -180,7 +180,62 @@ class TestSir(unittest.TestCase):
             self.assertEqual(len(self._sir._iterations_info), 1)
 
     def test_sir_infect_event(self):
-        pass
+        self._prepare_for_infect_event(1)
+
+        with mock.patch('sir.np.random.randint') as mock_randint:
+            mock_randint.return_value = 4
+            self._sir._infect_event()
+            mock_randint.assert_called_once_with(0, 5)
+            self._assert_nodes_state([0], [1, 2, 4, 5], [3], [])
+            self.assertEqual(self._sir._num_s_i_edges, 2)
+            self.assertEqual(self._sir._infected_nodes, [1, 2, 4, 5])
+            self.assertEqual(
+                self._sir._infected_node_edges, 
+                {2: [0], 4: [], 1: [0], 5: []}
+            )
+
+        self._prepare_for_infect_event(2)
+
+        with mock.patch('sir.np.random.randint') as mock_randint:
+            mock_randint.return_value = 0
+            self._sir._infect_event()
+            mock_randint.assert_called_once_with(0, 2)
+            self._assert_nodes_state([], [1, 2, 0], [3, 4], [5])
+            self.assertEqual(self._sir._num_s_i_edges, 0)
+            self.assertEqual(self._sir._infected_nodes, [1, 2, 0])
+            self.assertEqual(
+                self._sir._infected_node_edges, 
+                {1: [], 2: [], 0: []}
+            )
+
+    def test_sir_recover_event(self):
+        self._prepare_for_recover_event(1)
+
+        with mock.patch('sir.np.random.randint') as mock_randint:
+            mock_randint.return_value = 1
+            self._sir._recover_event()
+            mock_randint.assert_called_once_with(0, 3)
+            self._assert_nodes_state([0, 5], [1, 4], [3, 2], [])
+            self.assertEqual(self._sir._num_s_i_edges, 3)
+            self.assertEqual(self._sir._infected_nodes, [1, 4])
+            self.assertEqual(
+                self._sir._infected_node_edges, 
+                {4: [5], 1: [0, 5]}
+            )
+
+        self._prepare_for_recover_event(2)
+
+        with mock.patch('sir.np.random.randint') as mock_randint:
+            mock_randint.return_value = 0
+            self._sir._recover_event()
+            mock_randint.assert_called_once_with(0, 2)
+            self._assert_nodes_state([0], [2], [1, 3, 4], [5])
+            self.assertEqual(self._sir._num_s_i_edges, 1)
+            self.assertEqual(self._sir._infected_nodes, [2])
+            self.assertEqual(
+                self._sir._infected_node_edges, 
+                {2: [0]}
+            )
 
     def _assert_state_and_return_values(self):
         susc = 0
@@ -215,7 +270,7 @@ class TestSir(unittest.TestCase):
             [(0, 1), (0, 2), (1, 5), (2, 3), (2, 5), (3, 4), (4, 5)]
         )
 
-    def _prepare_simulation_case(self, case):
+    def _prepare_for_simulation(self, case):
         self._sir._initialize_sir_network = mock.Mock()
         self._sir._check_new_iteration = mock.Mock(
             wraps=self._sir._check_new_iteration
@@ -241,12 +296,12 @@ class TestSir(unittest.TestCase):
         event_manager.attach_mock(self._sir._recover_event, 'rec')
 
         if case == 1:
-            self._give_state_to_nodes([0, 1, 3], [4, 5], [2], [])
+            self._give_state_to_nodes([4, 5], [2], [1, 3], [0])
             self._sir._num_s_i_edges = 1
             self._sir._infected_nodes = [2]
             self._sir._infected_node_edges = {2: [5]}
         elif case == 2:
-            self._give_state_to_nodes([0, 3, 4], [1], [2, 5], [])
+            self._give_state_to_nodes([4], [2, 5], [1], [0, 3])
             self._sir._num_s_i_edges = 1
             self._sir._infected_nodes = [2, 5]
             self._sir._infected_node_edges = {2: [], 5: [1]}
@@ -261,25 +316,64 @@ class TestSir(unittest.TestCase):
         )
 
         if case == 1:
-            self._give_state_to_nodes([5, 0], [1, 2, 4], [3])
+            self._give_state_to_nodes([0, 5], [1, 2, 4], [3], [])
             self._sir._num_s_i_edges = 5
             self._sir._infected_nodes = [1, 2, 4]
-            self._sir._infected_node_edges = {1: [0, 5], 2: [0], 4: [0]}
+            self._sir._infected_node_edges = {
+                2: [0, 5], 4: [5], 1: [0, 5]
+            }
         elif case == 2:
-            self._give_state_to_nodes([0], [1, 2], [3, 4, 5])
+            self._give_state_to_nodes([0], [1, 2], [3, 4], [5])
+            self._sir._num_s_i_edges = 2
+            self._sir._infected_nodes = [1, 2]
+            self._sir._infected_node_edges = {1: [0], 2: [0]}
+
+    def _prepare_for_recover_event(self, case):
+        nx.classes.function.set_node_attributes(
+            self._sir.g, 
+            SirState.SUSCEPTIBLE, 
+            self._state
+        )
+
+        if case == 1:
+            self._give_state_to_nodes([0, 5], [1, 2, 4], [3], [])
             self._sir._num_s_i_edges = 5
+            self._sir._infected_nodes = [1, 2, 4]
+            self._sir._infected_node_edges = {
+                2: [0, 5], 4: [5], 1: [0, 5]
+            }
+        elif case == 2:
+            self._give_state_to_nodes([0], [1, 2], [3, 4], [5])
+            self._sir._num_s_i_edges = 2
             self._sir._infected_nodes = [1, 2]
             self._sir._infected_node_edges = {1: [0], 2: [0]}
 
     def _give_state_to_nodes(self, susc, inf, rec, vac):
         for i in susc:
-                self._sir.g.nodes[i][self._state] = SirState.RECOVERED
+            self._sir.g.nodes[i][self._state] = SirState.SUSCEPTIBLE
 
         for i in inf:
-            self._sir.g.nodes[i][self._state] = SirState.SUSCEPTIBLE
+            self._sir.g.nodes[i][self._state] = SirState.INFECTED
         
         for i in rec:
-            self._sir.g.nodes[i][self._state] = SirState.INFECTED
+            self._sir.g.nodes[i][self._state] = SirState.RECOVERED
 
         for i in vac:
             self._sir.g.nodes[i][self._state] = SirState.VACCINATED
+
+    def _assert_nodes_state(self, susc, inf, rec, vac):
+        for i in susc:
+            node = self._sir._g.nodes[i]
+            self.assertEqual(node[self._state], SirState.SUSCEPTIBLE)
+
+        for i in inf:
+            node = self._sir._g.nodes[i]
+            self.assertEqual(node[self._state], SirState.INFECTED)
+        
+        for i in rec:
+            node = self._sir._g.nodes[i]
+            self.assertEqual(node[self._state], SirState.RECOVERED)
+
+        for i in vac:
+            node = self._sir._g.nodes[i]
+            self.assertEqual(node[self._state], SirState.VACCINATED)
