@@ -6524,6 +6524,10 @@ graph [
     target 632
   ]
   edge [
+    source 422
+    target 1249
+  ]
+  edge [
     source 423
     target 471
   ]
@@ -8978,6 +8982,10 @@ graph [
   edge [
     source 1195
     target 1231
+  ]
+  edge [
+    source 1195
+    target 1247
   ]
   edge [
     source 1197

@@ -2760,10 +2760,6 @@ graph [
     target 617
   ]
   edge [
-    source 65
-    target 623
-  ]
-  edge [
     source 66
     target 475
   ]
@@ -2789,7 +2785,7 @@ graph [
   ]
   edge [
     source 71
-    target 623
+    target 622
   ]
   edge [
     source 72
@@ -2850,10 +2846,6 @@ graph [
   edge [
     source 87
     target 594
-  ]
-  edge [
-    source 87
-    target 623
   ]
   edge [
     source 88
@@ -2954,10 +2946,6 @@ graph [
   edge [
     source 113
     target 142
-  ]
-  edge [
-    source 113
-    target 623
   ]
   edge [
     source 114
@@ -3752,10 +3740,6 @@ graph [
     target 477
   ]
   edge [
-    source 370
-    target 623
-  ]
-  edge [
     source 371
     target 557
   ]
@@ -4077,7 +4061,7 @@ graph [
   ]
   edge [
     source 491
-    target 623
+    target 624
   ]
   edge [
     source 493
@@ -4398,10 +4382,6 @@ graph [
   edge [
     source 584
     target 606
-  ]
-  edge [
-    source 584
-    target 624
   ]
   edge [
     source 585

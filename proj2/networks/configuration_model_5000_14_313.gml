@@ -24380,10 +24380,6 @@ graph [
     target 1849
   ]
   edge [
-    source 1182
-    target 4999
-  ]
-  edge [
     source 1183
     target 4895
   ]
@@ -25040,10 +25036,6 @@ graph [
     target 3087
   ]
   edge [
-    source 1370
-    target 4999
-  ]
-  edge [
     source 1371
     target 4914
   ]
@@ -25490,6 +25482,10 @@ graph [
   edge [
     source 1500
     target 2488
+  ]
+  edge [
+    source 1500
+    target 4998
   ]
   edge [
     source 1502
@@ -26966,10 +26962,6 @@ graph [
   edge [
     source 1952
     target 4532
-  ]
-  edge [
-    source 1953
-    target 4999
   ]
   edge [
     source 1956
@@ -31210,10 +31202,6 @@ graph [
   edge [
     source 3531
     target 4983
-  ]
-  edge [
-    source 3531
-    target 4999
   ]
   edge [
     source 3532

@@ -22,7 +22,7 @@ def configuration_model(n, gamma, max_deg_f=lambda n, g: n, seed=None):
         sum_degrees += (i + 1) * add_nodes
         expected_degrees += [i+1] * add_nodes
 
-    if sum_degrees % 2 == 1:
+    if sum_degrees % 2 == 1:  # Sum of degrees has to be even
         expected_degrees[0] += 1
         sum_degrees += 1
 
@@ -44,12 +44,12 @@ def _connect_isolated_nodes(g, cum_deg_dist, max_deg):
             continue
 
         rnd = np.random.uniform()
-        i = 1
+        i = 0
 
         while rnd > cum_deg_dist[i]:
             i += 1
 
-        for _ in range(i):
+        for _ in range(i + 1):
             neigh = node
 
             while g.degree(neigh) >= max_deg or neigh == node:
