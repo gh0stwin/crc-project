@@ -9,8 +9,6 @@ class SirHandler(object):
         self._store_path = pl.Path('./results/')
 
     def simulate(self, files, betas, fs, times_per_beta_f, seed=0):
-        self._seed = seed
-
         for file in files:
             g = nx.convert_node_labels_to_integers(nx.read_gml(file))
 
@@ -40,7 +38,7 @@ class SirHandler(object):
             print('network: {}, iter: {}'.format(res_nm, i), end='\r')
             r = Sir(g.copy(), beta, f, seed).simulate()
             res_f.write('{},{},{}\n'.format(r[-1][0], r[-1][1], seed))
-            self._seed += 1
+            seed += 1
         
         res_f.close()
 
