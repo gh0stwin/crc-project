@@ -13,6 +13,8 @@ import time
 #       Probability of infection, Beta value
 #       Fraction of Vaccinated
 #       Number of samples
+#       Max infected
+#       Apogee
 
 SUSC = 'S'
 INF = 'I'
@@ -23,12 +25,12 @@ network_dict = {
     'ba': lambda n: nx.barabasi_albert_graph(n,2),
     'dms':  gg.create_DMS
 }
-networks = ['ba', 'dms']
+networks = ['ba']
 #betas = [1/32, 1/16, 1/8, 1/4, 1/2, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
 betas1 = [1/8, 1/2, 2.0, 8.0, 32.0]
 betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
 Ns = [625, 1250, 2500, 5000, 10000]
-samples = [300]#, 10000, 100000]
+samples = [1]#, 10000, 100000]
 frac_vacs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 vaccination_methods = [
     'dfs',
@@ -85,9 +87,9 @@ def simple():
                         for n_samples in samples:
                             print('\t\t\t\tSamples: %i' % (n_samples))
                             # run sir
-                            recovered = run_sir(n, n_samples, frac_vac, method, beta, network_dict[network])[0]
+                            report = run_sir(n, n_samples, frac_vac, method, beta, network_dict[network])
                             # get recovered
-                            f.write('%i %i %f %.1f %i\n' % (recovered, n, beta, frac_vac, n_samples))
+                            f.write('%f %i %f %.1f %i %f %f\n' % (report[0], n, beta, frac_vac, n_samples, report[1], report[2]))
             f.close()
                     
             
@@ -112,5 +114,5 @@ def remove_vacs(g):
     g = nx.convert_node_labels_to_integers(g)
     return g
 
-compare()
-#simple()
+#compare()
+simple()
