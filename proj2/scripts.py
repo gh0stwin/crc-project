@@ -55,5 +55,6 @@ if __name__ == '__main__':
     files = sorted(pl.Path('.').glob('**/*.gml'))
     betas = [0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32]
     fs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    iters = 100
     sh = SirHandler()
-    sh.simulate(files, betas, fs, 300000, 0)
+    sh.simulate(files, betas, fs, iters, 0)
