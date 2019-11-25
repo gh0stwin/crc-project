@@ -3,6 +3,7 @@ import math
 import networkx as nx
 import numpy as np
 import random as rnd
+from networkx.generators.classic import empty_graph
 
 
 def barabasi_albert_naive(n, avg_deg, seed=None):
@@ -53,3 +54,25 @@ def _add_edges_with_pref_attach(g, node, m):
         )
 
         g.add_edge(node, to_node)
+
+def create_DMS(n):
+    G = nx.Graph()
+    # add beggining 2 nodes and edges
+    G.add_node(0)
+    G.add_node(1)
+    G.add_edge(0,1)
+    G.add_node(2)
+    G.add_edge(2,0)
+    G.add_edge(2,1)
+
+    edges = [(0,1),(2,0),(2,1)]
+    # loop
+    for k in range(3,n):
+        edge = edges[rnd.randint(0, 2*k-6)]
+        G.add_node(k)
+        G.add_edge(k, edge[0])
+        G.add_edge(k, edge[1])
+        edges.append((k,edge[0]))
+        edges.append((k,edge[1]))
+    # 
+    return G

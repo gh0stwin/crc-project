@@ -17,7 +17,10 @@ def sir_simulation(g, beta, seed=None):
 
     infected_node_edges, num_s_i_edges = _first_infect_event(g)
     infected_nodes = list(infected_node_edges.keys())
-    iter_data = [[_count_type_nodes(g, SUSC), 1, 0, _count_type_nodes(g, VAC)]]
+    iter_data = [
+        [_count_type_nodes(g, SUSC), 1, 0, _count_type_nodes(g, VAC)],
+        [_count_type_nodes(g, SUSC), 1, 0, _count_type_nodes(g, VAC)]
+    ]
     return _sir_simulation_cycle(
         g, 
         beta, 
@@ -40,6 +43,7 @@ def _sir_simulation_cycle(
 
         # if new cycle, record data
         if rnd.random() < 1 / (inf_r + len(infected_nodes)):
+            # SUSC INF REC VAC
             iter_data.append([iter_data[-1][0], iter_data[-1][1], iter_data[-1][2], iter_data[-1][3]])
 
         # if infect event, infect one susceptible
@@ -62,15 +66,15 @@ def _sir_simulation_cycle(
                 num_s_i_edges
             )
         
-    return iter_data
+    return sim_report(iter_data)
 
 def _neighbour_s_i_edges(g, i_node):
     s_i_edges = []
 
     for edge in g.edges(i_node):
-        if g.nodes[edge[0]]['state'] == SUSC:
-            s_i_edges.append(edge[0])
-        elif g.nodes[edge[1]]['state'] == SUSC:
+        #if g.nodes[edge[0]]['state'] == SUSC:
+        #    s_i_edges.append(edge[0])
+        if g.nodes[edge[1]]['state'] == SUSC:
             s_i_edges.append(edge[1])
 
     return s_i_edges
@@ -172,6 +176,20 @@ def _count_type_nodes(g, type_node):
             n_s += 1
     return n_s
 
+def sim_report(iter_data):
+    '''
+    '''
+    max_inf = -1
+    max_k = 0
+    k = 0
+    for data in iter_data:
+        # SUSC INF REC VAC
+        if data[1] > max_inf:
+            max_inf = data[1]
+            max_k = k
+        k+=1
+    return [iter_data[-1][2], max_inf, max_k]
+
 if __name__ == '__main__':
     '''
     Arguments:
@@ -193,20 +211,17 @@ if __name__ == '__main__':
         g = nx.barabasi_albert_graph(n, 2)
         nx.classes.function.set_node_attributes(g, SUSC, 'state')
         g = _get_vaccinated_graph(g, frac, method)
-        # for node in g.nodes:
-        #     print(g.nodes[node]['state'])
         sims.append(sir_simulation(g, float(sys.argv[2])))
-        # print('--------')
-        # print(sims[0])
-        # for node in g.nodes:
-        #     print(g.nodes[node]['state'])
 
-    cum_infected_frac = 0
-    cum_recovered = 0
+    cum_report = [0,0,0]
 
     for report in sims:
-        #cum_infected_frac += report[-1][2]
-        cum_recovered += report[-1][2]
-
+        cum_report[0] += report[0] # Recovered
+        cum_report[1] += report[1] # Max infectious
+        cum_report[2] += report[2] # Apogee of infection
+        
     #print(cum_infected_frac / m)
-    print('RECOVERED: ' + str(cum_recovered / m))
+    print(str(cum_report[0]/ m))
+    print(str(cum_report[1]/ m))
+    print(str(cum_report[2]/ m))
+

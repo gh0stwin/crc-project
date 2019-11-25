@@ -16,13 +16,19 @@ def dfs_vaccinated_graph_iter(g, frac_vac):
     while vac / nodes < frac_vac:
         neighbors = list(g.edges(node))
         # Get next non vaccinated neighbor
-        while neighbor_iter < len(neighbors) - 1 and g.nodes[neighbors[neighbor_iter][1]]['state'] == VAC:
+        while neighbor_iter < len(neighbors) and g.nodes[neighbors[neighbor_iter][1]]['state'] == VAC:
             neighbor_iter += 1
 
         # No more neighbors
         if neighbor_iter > len(neighbors) - 1 :
             if len(stack) == 0:
-                break
+                node = rnd.randint(0, nodes - 1)
+                while g.nodes[node]['state'] == VAC:
+                    node = rnd.randint(0, nodes - 1)
+                neighbor_iter = 0
+                g.nodes[node]['state'] = VAC
+                vac += 1
+                continue
             node, neighbor_iter = stack.pop()
             continue
 
@@ -32,7 +38,6 @@ def dfs_vaccinated_graph_iter(g, frac_vac):
         neighbor_iter = 0
         g.nodes[node]['state'] = VAC
         vac += 1
-
     return g
 
 def dfs_vaccinated_graph(g, frac_vac):
@@ -85,7 +90,6 @@ def bfs_vaccinated_graph(g, frac_vac):
                 break
             g.nodes[neighbor[1]]['state'] = VAC
             vac += 1
-
     return g
 
 def rnd_vaccinated_graph(g, frac_vac):
@@ -103,7 +107,7 @@ def rnd_walk_vaccinated_graph(g, frac_vac, m = 0):
     '''
     # default
     if m == 0:
-        m = int(len(g) * 0.60)
+        m = int(len(g) * (frac_vac + 0.1))
     # Get highest degree nodes
     list_highest = [] # list of lists of (node_id, degree)
     max_list_size = int(frac_vac * len(g))
@@ -139,7 +143,6 @@ def rnd_walk_vaccinated_graph(g, frac_vac, m = 0):
     # Vaccinate highest
     for node in list_highest:
         g.nodes[node[0]]['state'] = VAC
-    
     return g
 
 def acq_vaccinated_graph(g, frac_vac):
@@ -150,7 +153,6 @@ def acq_vaccinated_graph(g, frac_vac):
     nodes = len(g)
     while vac / nodes < frac_vac: 
         node = rnd.randint(0, nodes - 1)
-
         for neighbor in g.edges(node):
             if g.nodes[neighbor[1]]['state'] == VAC:
                 continue
