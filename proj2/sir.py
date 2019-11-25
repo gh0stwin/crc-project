@@ -40,11 +40,6 @@ class Sir(object):
 
     @beta.setter
     def beta(self, beta):
-        if not 0 <= beta <= 1:
-            raise ValueError(
-                'beta should be a proportion (0 <= beta <= 1)'
-            )
-        
         self._beta = beta
 
     @property
@@ -68,10 +63,13 @@ class Sir(object):
         )
 
         self._vaccinate_before_sim()
-        self._iterations_info = []
         aux = self._first_infect_event()
         self._infected_node_edges, self._num_s_i_edges = aux
         self._infected_nodes = list(self._infected_node_edges.keys())
+        self._iterations_info = [[
+            len(self._g) - len(self._infected_nodes), 
+            len(self._infected_nodes)
+        ]]
 
     def _first_infect_event(self):
         susc_nodes = [
