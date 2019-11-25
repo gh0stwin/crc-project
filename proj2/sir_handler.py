@@ -6,13 +6,13 @@ from sir import Sir
 
 class SirHandler(object):
     def __init__(self):
-        self._store_path = pl.Path('./simulations/')
+        self._store_path = pl.Path('./results/')
 
     def simulate(self, files, betas, fs, times_per_beta_f, seed=0):
         self._seed = seed
 
         for file in files:
-            g = nx.read_gml(file)
+            g = nx.convert_node_labels_to_integers(nx.read_gml(file))
 
             for beta in betas:
                 for f in fs:
@@ -29,9 +29,8 @@ class SirHandler(object):
         return self._store_path.joinpath(
             (
                 pl.Path(file).stem.rsplit('_', 1)[0] + 
-                '_{}_{}'.format(beta, f).replace('.', '')
-            ), 
-            '.out'
+                '_{}_{}'.format(beta, f).replace('.', '') + '.out'
+            )
         )
 
     def _simulate_for_net_beta_f(self, res_nm, g, beta, f, iters, seed):
@@ -40,7 +39,7 @@ class SirHandler(object):
         for i in range(iters):
             print('network: {}, iter: {}'.format(res_nm, i), end='\r')
             r = Sir(g.copy(), beta, f, seed).simulate()
-            res_f.write('{},{},{}\n'.format(r[-1][0], r[-1][0], seed))
+            res_f.write('{},{},{}\n'.format(r[-1][0], r[-1][1], seed))
             self._seed += 1
         
         res_f.close()
