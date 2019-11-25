@@ -37,22 +37,12 @@ class TestSir(unittest.TestCase):
         self.assertEqual(self._sir.beta, self._beta)
         self._sir.beta = 0
         self.assertEqual(self._sir.beta, 0)
-        self._sir.beta = 1e0
+        self._sir.beta = 1e10
         self.assertEqual(self._sir.beta, 1)
         self._sir.beta = 0.0001
         self.assertEqual(self._sir.beta, 0.0001)
-        self._sir.beta = 0.999
+        self._sir.beta = -999
         self.assertEqual(self._sir.beta, 0.999)
-
-    def test_sir_beta_property_exception(self):
-        with self.assertRaises(ValueError):
-            self._sir.beta = -.1
-
-        with self.assertRaises(ValueError):
-            self._sir.beta = -2
-
-        with self.assertRaises(ValueError):
-            self._sir.beta = 1.1
 
     def test_sir_f_property(self):
         self.assertEqual(self._sir.f, self._f)

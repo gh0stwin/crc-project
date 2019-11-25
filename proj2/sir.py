@@ -40,11 +40,6 @@ class Sir(object):
 
     @beta.setter
     def beta(self, beta):
-        if not 0 <= beta <= 1:
-            raise ValueError(
-                'beta should be a proportion (0 <= beta <= 1)'
-            )
-        
         self._beta = beta
 
     @property
