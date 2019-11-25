@@ -25,10 +25,10 @@ class SirHandler(object):
                         end='\r'
                     )
                     res = Sir(g.copy(), beta, f, seed).simulate()
-                    write_in_file(res, net_path, beta, f, seed)
+                    self._write_in_file(res, net_path, beta, f, seed)
                     seed += 1
 
-    def write_in_file(self, result, net_path, beta, f, seed):
+    def _write_in_file(self, result, net_path, beta, f, seed):
         file_path = self._store_path.joinpath(
             (
                 pl.Path(net_path).stem + 
