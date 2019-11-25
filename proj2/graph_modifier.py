@@ -3,7 +3,7 @@ import numpy as np
 
 def modify_deg_dist(g, expected_deg_dist, min_diff=1e-2):
     edges_array = np.array(g.edges)
-    current_deg_dist = g.size / len(g)
+    current_deg_dist = g.size() / len(g)
 
     while abs(expected_deg_dist - current_deg_dist) > min_diff:
         change_idx = np.random.randint(0, len(edges_array))

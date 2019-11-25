@@ -3,20 +3,21 @@ import networkx.classes
 import networkx.classes.function
 import random as rnd
 import sys
+from graph_vacinator import methods
 
 
 SUSC = 'S'
 INF = 'I'
 REC = 'R'
+VAC = 'V'
 
 def sir_simulation(g, beta, seed=None):
     if seed:
         rnd.seed(seed)
 
-    iter_data = [[len(g) - 1, 1]]
-    nx.classes.function.set_node_attributes(g, SUSC, 'state')
     infected_node_edges, num_s_i_edges = _first_infect_event(g)
     infected_nodes = list(infected_node_edges.keys())
+    iter_data = [[_count_type_nodes(g, SUSC), 1, 0, _count_type_nodes(g, VAC)]]
     return _sir_simulation_cycle(
         g, 
         beta, 
@@ -37,12 +38,14 @@ def _sir_simulation_cycle(
     while infected_nodes:
         inf_r = beta * num_s_i_edges
 
+        # if new cycle, record data
         if rnd.random() < 1 / (inf_r + len(infected_nodes)):
-            iter_data.append([iter_data[-1][0], iter_data[-1][1]])
+            iter_data.append([iter_data[-1][0], iter_data[-1][1], iter_data[-1][2], iter_data[-1][3]])
 
+        # if infect event, infect one susceptible
         if rnd.random() < (inf_r / (inf_r + len(infected_nodes))):
-            iter_data[-1][1] += 1
-            iter_data[-1][0] -= 1
+            iter_data[-1][1] += 1 # Add to INF count
+            iter_data[-1][0] -= 1 # Reduce SUSC count
             num_s_i_edges = _infect_event(
                 g, 
                 infected_nodes, 
@@ -50,7 +53,8 @@ def _sir_simulation_cycle(
                 num_s_i_edges
             )
         else:
-            iter_data[-1][1] -= 1
+            iter_data[-1][1] -= 1 # Reduce INF count
+            iter_data[-1][2] += 1 # Add to REC count
             num_s_i_edges = _recover_event(
                 g, 
                 infected_nodes, 
@@ -72,6 +76,9 @@ def _neighbour_s_i_edges(g, i_node):
     return s_i_edges
     
 def _rm_s_i_edges_of_new_infected(g, i_node, infected_node_edges):
+    '''
+    Remove edges between susceptible and infected nodes for the new infected node.
+    '''
     edges_removed = 0
 
     for neigh in g.neighbors(i_node):
@@ -87,7 +94,13 @@ def _rm_s_i_edges_of_new_infected(g, i_node, infected_node_edges):
     return edges_removed
 
 def _first_infect_event(g):
-    node_to_infect = rnd.randint(0, len(g) - 1)
+    '''
+    Infect patient zero and get his edges.
+    '''
+    while True:
+        node_to_infect = rnd.randint(0, len(g) - 1)
+        if g.nodes[node_to_infect]['state'] != VAC:
+            break
     g.nodes[node_to_infect]['state'] = INF
     s_i_edges = _neighbour_s_i_edges(g, node_to_infect)
     return {node_to_infect: s_i_edges}, len(s_i_edges)
@@ -142,19 +155,58 @@ def _max_infected(report):
 
     return max_val
 
+def _get_vaccinated_graph(g, frac_vac, method):
+    '''
+    Get vaccinated graph by using the requested method with the given 
+    graph g and fraction frac_vac
+    '''
+    return methods[method](g, frac_vac)
+    
+def _count_type_nodes(g, type_node):
+    '''
+    Count susceptible nodes.
+    '''
+    n_s = 0
+    for node in g.nodes:
+        if g.nodes[node]['state'] == type_node:
+            n_s += 1
+    return n_s
+
 if __name__ == '__main__':
+    '''
+    Arguments:
+        1: Number of nodes per graph
+        2: Beta (Probability of Infection)
+        3: Number of samples to run
+        4: Vaccinated fraction
+        5: Vaccination method
+    '''
     print(*sys.argv)
 
     sims = []
     n = int(sys.argv[1])
     m = int(sys.argv[3])
+    frac = float(sys.argv[4])
+    method = sys.argv[5]
     
     for _ in range(m):
-        sims.append(sir_simulation(nx.barabasi_albert_graph(n, 2), float(sys.argv[2])))
-    
+        g = nx.barabasi_albert_graph(n, 2)
+        nx.classes.function.set_node_attributes(g, SUSC, 'state')
+        g = _get_vaccinated_graph(g, frac, method)
+        # for node in g.nodes:
+        #     print(g.nodes[node]['state'])
+        sims.append(sir_simulation(g, float(sys.argv[2])))
+        # print('--------')
+        # print(sims[0])
+        # for node in g.nodes:
+        #     print(g.nodes[node]['state'])
+
     cum_infected_frac = 0
+    cum_recovered = 0
 
     for report in sims:
-        cum_infected_frac += (n - _max_infected(report)) / n
+        #cum_infected_frac += report[-1][2]
+        cum_recovered += report[-1][2]
 
-    print(cum_infected_frac / m)
+    #print(cum_infected_frac / m)
+    print('RECOVERED: ' + str(cum_recovered / m))
