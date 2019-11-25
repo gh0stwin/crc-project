@@ -68,14 +68,18 @@ def configuration_model(n, gamma, max_deg_f=lambda n, g: n, seed=None):
         deg_dist[i] = c * ((i + 1) ** -gamma)
         expected_degrees += [i+1] * int(round(n * deg_dist[i]))
 
-    g = nx.expected_degree_graph(
+    g = nx.configuration_model(
         expected_degrees, 
         seed=seed, 
-        selfloops=False
+        create_using=nx.Graph
     )
+
+    g.remove_edges_from(nx.selfloop_edges(g))
 
     cum_deg_dist = np.cumsum(deg_dist)
     cum_deg_dist[-1] = 1
+
+    # connect nodes with degree 0
 
     while len(g) < n:
         rnd = np.random.uniform()
@@ -92,7 +96,7 @@ def configuration_model(n, gamma, max_deg_f=lambda n, g: n, seed=None):
             while g.degree(neigh) >= max_deg:
                 neigh = np.random.randint(0, len(g) - 1)
 
-            g.add_edge((len(g) - 1, neigh))
+            g.add_edge(len(g) - 1, neigh)
         
     return g
 
