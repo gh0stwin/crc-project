@@ -25,12 +25,12 @@ network_dict = {
     'ba': lambda n: nx.barabasi_albert_graph(n,2),
     'dms':  gg.create_DMS
 }
-networks = ['ba']
+networks = ['dms']
 #betas = [1/32, 1/16, 1/8, 1/4, 1/2, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
 betas1 = [1/8, 1/2, 2.0, 8.0, 32.0]
 betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
 Ns = [625, 1250, 2500, 5000, 10000]
-samples = [1]#, 10000, 100000]
+samples = [300]#, 10000, 100000]
 frac_vacs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 vaccination_methods = [
     'dfs',
