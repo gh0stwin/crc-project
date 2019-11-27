@@ -25,12 +25,12 @@ network_dict = {
     'ba': lambda n: nx.barabasi_albert_graph(n,2),
     'dms':  gg.create_DMS
 }
-networks = ['ba']
+networks = ['dms']
 #betas = [1/32, 1/16, 1/8, 1/4, 1/2, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
 betas1 = [1/8, 1/2, 2.0, 8.0, 32.0]
 betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
 Ns = [625, 1250, 2500, 5000, 10000]
-samples = [1]#, 10000, 100000]
+samples = [300]
 frac_vacs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 vaccination_methods = [
     'dfs',
@@ -78,14 +78,14 @@ def simple():
             for n in Ns:
                 print('\tN: %i' % (n))
                 # Beta
-                for beta in betas1: # PEDRO MUDA AQUI TOTO
+                for beta in betas2: # PEDRO MUDA AQUI TOTO
                     print('\t\tBeta: %f' % (beta))
                     # Fraction Vaccinated
                     for frac_vac in frac_vacs:
                         print('\t\t\tFV: %.1f' % (frac_vac))
                         # Samples
                         for n_samples in samples:
-                            print('\t\t\t\tSamples: %i' % (n_samples))
+                            # print('\t\t\t\tSamples: %i' % (n_samples))
                             # run sir
                             report = run_sir(n, n_samples, frac_vac, method, beta, network_dict[network])
                             # get recovered
