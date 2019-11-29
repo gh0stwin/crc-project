@@ -11,13 +11,7 @@ class TwoStepHeuristic(VaccinationProtocol):
         self._acronym = 'TS'
 
     def vaccinate_network(self, **kwargs):
-        n = kwargs.get('n', 0)
-        nodes_to_vacc = int(round(len(self._g) * self._f))
-
-        if n < nodes_to_vacc:
-            n = nodes_to_vacc
-
-        return self._tsh(n)
+        return self._tsh(kwargs.get('n', 0))
 
     def _tsh(self, n):
         reduced_g = self._get_subgraph(n)
@@ -29,9 +23,7 @@ class TwoStepHeuristic(VaccinationProtocol):
         return 2 * n
 
     def _get_subgraph(self, n):
-        n1_nodes = np.arange(len(self._g))
-        np.random.shuffle(n1_nodes)
-        n1_nodes = n1_nodes[:n]
+        n1_nodes = self._get_n_random_nodes(n)
         reduced_graph_nodes = list(n1_nodes)
 
         for node in n1_nodes:
@@ -46,9 +38,16 @@ class TwoStepHeuristic(VaccinationProtocol):
             reverse=True
         )[:n]
 
-        return sorted(
+        high_deg_nodes = sorted(
             list(self._g.degree(high_deg_nodes_reduced_g)),
             key=lambda el: el[1],
             reverse=True
-        )[:self._nodes_to_vacc]
+        )[:self._n_nodes_to_vacc]
+
+        diff = len(high_deg_nodes) - self._n_nodes_to_vacc
+
+        if diff < 0:
+            high_deg_nodes += self._get_n_random_nodes(abs(diff))
+
+        return high_deg_nodes
 

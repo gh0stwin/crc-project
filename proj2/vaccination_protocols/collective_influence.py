@@ -12,9 +12,10 @@ class CollectiveInfluence(VaccinationProtocol):
         self._l = 3
 
     def vaccinate_network(self, **kwargs):
+        self._compute_ci()
         return len(self._g)
 
-    def _compute_ci(self, l):
+    def _compute_ci(self):
         graph_cp = self._g.copy()
 
         for _ in range(self._n_nodes_to_vacc):

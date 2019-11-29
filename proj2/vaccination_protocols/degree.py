@@ -15,7 +15,7 @@ class Degree(VaccinationProtocol):
             list(self._g.degree),
             key=lambda el: el[1],
             reverse=True
-        )[:self._nodes_to_vacc]
+        )[:self._n_nodes_to_vacc]
 
         for node, _ in high_deg_nodes:
             self._g.nodes[node][self._state] = SirState.VACCINATED

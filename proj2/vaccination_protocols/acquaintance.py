@@ -10,18 +10,18 @@ class Acquaintance(VaccinationProtocol):
         self._acronym = 'AC'
 
     def vaccinate_network(self, **kwargs):
-        nodes = list(range(len(self._g)))
+        unvacc_nodes = list(range(len(self._g)))
 
-        for _ in range(int(round(len(self._g) * self._f))):
+        for _ in range(self._n_nodes_to_vacc):
             self._vaccinate_acquaintance(
-                nodes, 
+                unvacc_nodes, 
                 self._g[np.random.randint(0, len(self._g))]
             )
 
         return len(self._g) * self._f
 
 
-    def _vaccinate_acquaintance(self, nodes, picked_node):
+    def _vaccinate_acquaintance(self, unvacc_nodes, picked_node):
         neighs = []
         node_to_vacc = None
 
@@ -31,8 +31,10 @@ class Acquaintance(VaccinationProtocol):
 
         if len(neighs) > 0:
             node_to_vacc = neighs[np.random.randint(0, len(neighs))]
-            nodes.remove(node_to_vacc)
+            unvacc_nodes.remove(node_to_vacc)
         else:
-            node_to_vacc = nodes.pop(np.random.randint(0, len(nodes)))
+            node_to_vacc = unvacc_nodes.pop(
+                np.random.randint(0, len(unvacc_nodes))
+            )
         
         self._g.nodes[node_to_vacc][self._state] = SirState.VACCINATED

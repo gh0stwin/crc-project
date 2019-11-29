@@ -5,26 +5,22 @@ from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 
 class RandomWalk(VaccinationProtocol):
-    def __init__(self, g, f, state='state'):
+    def __init__(self, g, f, state='state', alpha=3):
         super(RandomWalk, self).__init__(g, f, state)
         self._acronym = 'RW'
+        self._alpha = alpha
 
     def vaccinate_network(self, **kwargs):
-        alpha = kwargs.get('alpha', 3)
-        m = kwargs.get('m', 0)
+        self._random_walk(kwargs.get('m', 0))
 
-        
-
-    def _random_walk(self, alpha, m):
+    def _random_walk(self, m):
         visit_node, visit_node_deg = None, None
         best_nodes, best_degrees = self._get_random_nodes_and_degs(
-            int(round(len(self._g) * self._f))
+            self._n_nodes_to_vacc
         )
 
         for _ in range(m + 1):
             visit_node, visit_node_deg = self._choose_node(
-                alpha, 
-                m, 
                 visit_node, 
                 visit_node_deg
             )
@@ -37,10 +33,10 @@ class RandomWalk(VaccinationProtocol):
                 best_degrees = best_degrees[idxs]
 
         self._vaccinate_nodes(best_nodes)
-        return m * (1 - alpha / (self._g.size() + alpha))
+        return m * (1 - self._alpha / (self._g.size() + self._alpha))
 
-    def _get_random_nodes_and_degs(self, n_nodes_to_vacc):
-        best_nodes = self._get_n_random_nodes(n_nodes_to_vacc)
+    def _get_random_nodes_and_degs(self, n):
+        best_nodes = np.array(self._get_n_random_nodes(n), dtype=int)
         best_degrees = np.array(
             [self._g.degree[node] for node in best_nodes],
             dtype=int
@@ -50,13 +46,15 @@ class RandomWalk(VaccinationProtocol):
         return best_nodes[idxs], best_degrees[idxs]
 
 
-    def _choose_node(self, alpha, m, current_node, current_node_deg):
+    def _choose_node(self, current_node, current_node_deg):
         visit_node = None
 
         if current_node == None:
                 visit_node = np.random.randint(0, len(self._g))
         else:
-            if np.random.uniform() < alpha / (current_node_deg + alpha):
+            if np.random.uniform() < self._alpha / (
+                current_node_deg + self._alpha
+            ):
                 visit_node = np.random.randint(0, len(self._g))
             else:
                 current_node_neighs = list(
