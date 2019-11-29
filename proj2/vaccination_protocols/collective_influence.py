@@ -6,19 +6,20 @@ from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 
 class CollectiveInfluence(VaccinationProtocol):
-    def __init__(self, g, f, state='state'):
-        super(CollectiveInfluence, self).__init__(g, f, state)
+    def __init__(self):
+        super(CollectiveInfluence, self).__init__()
         self._acronym = 'CI'
-        self._l = 3
 
-    def vaccinate_network(self, **kwargs):
-        self._compute_ci()
-        return len(self._g)
+    def vaccinate_network(self, g, f, state='state', **kwargs):
+        l = kwargs.get('l', 3)
+        self._compute_ci(g, f, l)
+        return len(g)
 
-    def _compute_ci(self):
-        graph_cp = self._g.copy()
+    def _compute_ci(self, g, f):
+        n_nodes_to_vacc = int(round(len(g) * f))
+        graph_cp = g.copy()
 
-        for _ in range(self._n_nodes_to_vacc):
+        for _ in range(n_nodes_to_vacc):
             max_ci = -1
             node_with_max_ci = None
 
@@ -43,5 +44,5 @@ class CollectiveInfluence(VaccinationProtocol):
                     max_ci = current_ci
 
             graph_cp.remove_node(node_with_max_ci)
-            self._g.nodes[node_with_max_ci][self._state] = \
+            g.nodes[node_with_max_ci][state] = \
                 SirState.VACCINATED

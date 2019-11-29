@@ -3,19 +3,16 @@ import numpy as np
 
 
 class Vaccination_protocol(ABC):
-    def __init__(self, g, f, state='state'):
-        self._g = g
-        self._f = f
+    def __init__(self, state='state'):
         self._state = state
         self._acronym = ''
-        self._n_nodes_to_vacc = int(round(len(self._g) * self._f))
 
     @property
     def acronym(self):
         return self._acronym
 
     @abstractmethod
-    def vaccinate_network(self, **kwargs):
+    def vaccinate_network(self, g, f, **kwargs):
         pass
 
     def _get_random_n_nodes(self, n):

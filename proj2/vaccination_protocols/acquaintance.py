@@ -5,28 +5,37 @@ from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 
 class Acquaintance(VaccinationProtocol):
-    def __init__(self, g, f, state='state'):
-        super(Acquaintance, self).__init__(g, f, state)
+    def __init__(self):
+        super(Acquaintance, self).__init__()
         self._acronym = 'AC'
 
-    def vaccinate_network(self, **kwargs):
-        unvacc_nodes = list(range(len(self._g)))
+    def vaccinate_network(self, g, f, state='state', **kwargs):
+        unvacc_nodes = list(range(len(g)))
+        n_nodes_to_vacc = int(round(len(g) * f))
 
-        for _ in range(self._n_nodes_to_vacc):
+        for _ in range(n_nodes_to_vacc):
             self._vaccinate_acquaintance(
+                g,
                 unvacc_nodes, 
-                self._g[np.random.randint(0, len(self._g))]
+                g[np.random.randint(0, len(g))],
+                state
             )
 
-        return len(self._g) * self._f
+        return len(g) * f
 
 
-    def _vaccinate_acquaintance(self, unvacc_nodes, picked_node):
+    def _vaccinate_acquaintance(
+        self, 
+        g, 
+        unvacc_nodes, 
+        picked_node, 
+        state
+    ):
         neighs = []
         node_to_vacc = None
 
-        for i in self._g.neighbors(picked_node):
-            if self._g.nodes[i][self._state] == SirState.SUSCEPTIBLE:
+        for i in g.neighbors(picked_node):
+            if g.nodes[i][self._state] == SirState.SUSCEPTIBLE:
                 neighs.append(i)
 
         if len(neighs) > 0:
@@ -37,4 +46,4 @@ class Acquaintance(VaccinationProtocol):
                 np.random.randint(0, len(unvacc_nodes))
             )
         
-        self._g.nodes[node_to_vacc][self._state] = SirState.VACCINATED
+        g.nodes[node_to_vacc][state] = SirState.VACCINATED

@@ -6,18 +6,19 @@ from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 
 class Coreness(VaccinationProtocol):
-    def __init__(self, g, f, state='state'):
-        super(Coreness, self).__init__(g, f, state)
+    def __init__(self):
+        super(Coreness, self).__init__()
         self._acronym = 'CO'
 
-    def vaccinate_network(self, **kwargs):
+    def vaccinate_network(self, g, f, state='state'):
+        n_nodes_to_vacc = int(round(len(g) * f))
         high_core_nodes = sorted(
-            nx.core_number(self._g).items(),
+            nx.core_number(g).items(),
             key=lambda el: el[1],
             reverse=True
-        )[:self._n_nodes_to_vacc]
+        )[:n_nodes_to_vacc]
 
         for node, _ in high_core_nodes:
-            self._g.nodes[node][self._state] = SirState.VACCINATED
+            g.nodes[node][state] = SirState.VACCINATED
 
-        return len(self._g)
+        return len(g)

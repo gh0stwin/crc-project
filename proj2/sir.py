@@ -13,13 +13,15 @@ class SirState(enum.Enum):
     VACCINATED = 4
 
 class Sir(object):
-    def __init__(self, g, beta, f=0, seed=None):
+    def __init__(self, g, beta, vacc_prot, vacc_args, f=0, seed=None):
         if seed is not None:
             np.random.seed(seed)
 
         self._state = 'state'
         self.g = g
         self.beta = beta
+        self._vacc_protocol = vacc_prot
+        self._vacc_protocol_args
         self.f = f
         self._num_s_i_edges = 0
         self._infected_nodes = []
@@ -55,6 +57,10 @@ class Sir(object):
 
         self._f = f
 
+    @property
+    def vaccination_protocol(self):
+        return self._vacc_protocol
+
     def _initialize_sir_network(self):
         nx.classes.function.set_node_attributes(
             self._g, 
@@ -62,7 +68,12 @@ class Sir(object):
             self._state
         )
 
-        self._vaccinate_before_sim()
+        self._vacc_protocol.vaccinate_network(
+            self._g, 
+            self._f, 
+            **self._vacc_protocol_args
+        )
+
         aux = self._first_infect_event()
         self._infected_node_edges, self._num_s_i_edges = aux
         self._infected_nodes = list(self._infected_node_edges.keys())
