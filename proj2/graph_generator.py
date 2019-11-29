@@ -1,4 +1,3 @@
-import gmpy2 as gm
 import math
 import networkx as nx
 import numpy as np
