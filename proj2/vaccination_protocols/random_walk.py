@@ -1,6 +1,6 @@
 import numpy as np
 
-from sir import SirState
+from sir.sir import SirState
 from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 
@@ -10,8 +10,8 @@ class RandomWalk(VaccinationProtocol):
         self._acronym = 'RW'
 
     def vaccinate_network(self, g, f, state='state', **kwargs):
-        alpha = kwargs('alpha', 3)
-        m = kwargs('m', 0)
+        alpha = kwargs.get('alpha', 3)
+        m = kwargs.get('m', 0)
         n_nodes_to_vacc = int(round(len(g) * f))
 
         visit_node, visit_node_deg = None, None
@@ -20,7 +20,7 @@ class RandomWalk(VaccinationProtocol):
             n_nodes_to_vacc
         )
 
-        for _ in range(self._m + 1):
+        for _ in range(m + 1):
             visit_node, visit_node_deg = self._choose_node(
                 g,
                 alpha,
@@ -35,11 +35,11 @@ class RandomWalk(VaccinationProtocol):
                 best_nodes = best_nodes[idxs]
                 best_degrees = best_degrees[idxs]
 
-        self._vaccinate_nodes(best_nodes)
-        return m * (1 - alpha / (g.size() + alpha))
+        self._vaccinate_nodes(g, best_nodes, state)
+        return m * (1 - alpha / (2 * g.size() / len(g) + alpha))
 
     def _get_random_nodes_and_degs(self, g, n):
-        best_nodes = np.array(self._get_n_random_nodes(n), dtype=int)
+        best_nodes = np.array(self._get_n_random_nodes(g, n), dtype=int)
         best_degrees = np.array(
             [g.degree[node] for node in best_nodes],
             dtype=int

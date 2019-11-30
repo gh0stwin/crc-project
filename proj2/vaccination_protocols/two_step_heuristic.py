@@ -1,15 +1,14 @@
 import networkx as nx
 import numpy as np
 
-from sir import SirState
+from sir.sir import SirState
 from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 
 class TwoStepHeuristic(VaccinationProtocol):
-    def __init__(self, g, f, state='state', n=0):
-        super(TwoStepHeuristic, self).__init__(g, f, state)
+    def __init__(self):
+        super(TwoStepHeuristic, self).__init__()
         self._acronym = 'TS'
-        self._n = n
 
     def vaccinate_network(self, g, f, state='state', **kwargs):
         n = kwargs.get('n', 0)

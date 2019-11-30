@@ -2,9 +2,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class Vaccination_protocol(ABC):
-    def __init__(self, state='state'):
-        self._state = state
+class VaccinationProtocol(ABC):
+    def __init__(self):
         self._acronym = ''
 
     @property
@@ -15,8 +14,8 @@ class Vaccination_protocol(ABC):
     def vaccinate_network(self, g, f, **kwargs):
         pass
 
-    def _get_random_n_nodes(self, n):
-        nodes = list(range(len(self._g)))
+    def _get_n_random_nodes(self, g, n):
+        nodes = list(range(len(g)))
         selected_nodes = []
 
         for _ in range(n):

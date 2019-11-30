@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 
-from sir import SirState
+from sir.sir import SirState
 from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 

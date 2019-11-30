@@ -3,9 +3,12 @@ import networkx as nx
 import os
 import pathlib as pl
 
-from evaluate_results import _str_to_float
+# from evaluate_results import _str_to_float
+def _str_to_float(str_num):
+    pass
+
 from graph_generator import configuration_model, dms
-from sir_handler import SirHandler
+from sir.sir_controller import SirController
 
 
 def create_networks(
@@ -107,32 +110,34 @@ def run_files_with_miss_results(miss_results, iters, res_path):
             )
 
 if __name__ == '__main__':
-    # create_networks(
-    #     [625, 1250, 2500, 5000, 10000],
-    #     configuration_model,
-    #     (2.5, lambda n, g: int(round(n ** (1 / (g - 1))))),
-    #     './networks/configuration-model',
-    #     100,
-    #     0
-    # )
+    create_networks(
+        [625, 1250, 2500, 5000, 10000],
+        configuration_model,
+        (2.5, lambda n, g: int(round(n ** (1 / (g - 1))))),
+        './networks/configuration-model',
+        300,
+        0
+    )
 
-    # create_networks(
-    #     [625, 1250, 2500, 5000, 10000],
-    #     dms,
-    #     tuple(),
-    #     './networks/dms',
-    #     100,
-    #     0
-    # )
+    create_networks(
+        [625, 1250, 2500, 5000, 10000],
+        dms,
+        tuple(),
+        './networks/dms',
+        300,
+        0
+    )
 
-    # create_networks(
-    #     [625, 1250, 2500, 5000, 10000],
-    #     nx.barabasi_albert_graph,
-    #     (2,),
-    #     './networks/ba',
-    #     100,
-    #     0
-    # )
+    create_networks(
+        [625, 1250, 2500, 5000, 10000],
+        nx.barabasi_albert_graph,
+        (2,),
+        './networks/ba',
+        300,
+        0
+    )
+
+    ####################################################################
 
     # files = sorted(pl.Path('.').glob('**/*.gml'))
     # betas = [0.5, 1, 2]
@@ -141,15 +146,17 @@ if __name__ == '__main__':
     # sh = SirHandler()
     # sh.simulate(files, betas, fs, iters, 0)
 
-    networks_path = './networks/'
-    results_path = './results/'
-    betas = [0.5, 1, 2]
-    fs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-    miss_res = check_files_with_no_results(
-        get_files_by_props(['ba'], [10000], 20, 21, networks_path),
-        betas,
-        fs,
-        results_path
-    )
+    ####################################################################
 
-    print(miss_res)
+    # networks_path = './networks/'
+    # results_path = './results/'
+    # betas = [0.5, 1, 2]
+    # fs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    # miss_res = check_files_with_no_results(
+    #     get_files_by_props(['ba'], [10000], 20, 21, networks_path),
+    #     betas,
+    #     fs,
+    #     results_path
+    # )
+
+    # print(miss_res)

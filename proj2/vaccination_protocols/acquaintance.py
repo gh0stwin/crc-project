@@ -1,6 +1,6 @@
 import numpy as np
 
-from sir import SirState
+from sir.sir import SirState
 from vaccination_protocols.vaccination_protocol import VaccinationProtocol
 
 
@@ -17,7 +17,7 @@ class Acquaintance(VaccinationProtocol):
             self._vaccinate_acquaintance(
                 g,
                 unvacc_nodes, 
-                g[np.random.randint(0, len(g))],
+                np.random.randint(0, len(g)),
                 state
             )
 
@@ -35,7 +35,7 @@ class Acquaintance(VaccinationProtocol):
         node_to_vacc = None
 
         for i in g.neighbors(picked_node):
-            if g.nodes[i][self._state] == SirState.SUSCEPTIBLE:
+            if g.nodes[i][state] == SirState.SUSCEPTIBLE:
                 neighs.append(i)
 
         if len(neighs) > 0:
