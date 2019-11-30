@@ -4,6 +4,7 @@ import graph_vacinator as gv
 import graph_modifier as gm
 import networkx as nx
 import time
+import math
 
 # Files are created with the following rules in folder values
 #   filename is the name of the method .txt
@@ -25,7 +26,7 @@ network_dict = {
     'ba': lambda n: nx.barabasi_albert_graph(n,2),
     'dms':  gg.create_DMS
 }
-networks = ['dms']
+networks = ['ba', 'dms']
 #betas = [1/32, 1/16, 1/8, 1/4, 1/2, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
 betas1 = [1/8, 1/2, 2.0, 8.0, 32.0]
 betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
@@ -94,15 +95,86 @@ def simple():
                     
             
 def compare():
-    n = 2500
+    Ns = [1250, 2500]
     method = 'dfs'
-    beta = 32
-    for n_samp in [300, 300, 300, 300, 300, 300, 300]:
-        start_time = time.time()
-        report = run_sir(n, n_samp, 0.2, method, beta, network_dict['dms'])
-        print("%2.3f seconds" % (time.time() - start_time))
-        print(report)
-        print('\n')
+    beta = 16
+    for network in ['ba', 'dms']:
+        print('\n\nNETWORK: %s' % (network))
+        for n in Ns:
+            print('\nSIZE: %i' % (n))
+            f = open("values/complexity/beta16-%s-%i.txt" % (network, n), 'w+')
+            for n_samples in [10, 100, 300, 500]:
+                total_time = []
+                reports = []
+                for k in range(7):
+                    start_time = time.time()
+                    report = run_sir(n, n_samples, 0.2, method, beta, network_dict[network])
+                    finish_time = time.time() - start_time
+                    total_time.append(finish_time)
+                    reports.append(report)
+                    print(report)
+                # statistics
+                med_sum = reports[0]
+                values = [[reports[0][0]], [reports[0][1]], [reports[0][2]]]
+                max_val = [reports[0][0],reports[0][1],reports[0][2]]
+                min_val = [reports[0][0],reports[0][1],reports[0][2]]
+                for k in range(1, len(reports)):
+                    # values
+                    values[0].append(reports[k][0])
+                    values[1].append(reports[k][1])
+                    values[2].append(reports[k][2])
+                    # median
+                    med_sum[0] += reports[k][0]
+                    med_sum[1] += reports[k][1]
+                    med_sum[2] += reports[k][2]
+                    # Recovered
+                    if reports[k][0] > max_val[0]:
+                        max_val[0] = reports[k][0]
+                    if reports[k][0] < min_val[0]:
+                        min_val[0] = reports[k][0]
+                    # Max_val infectious
+                    if reports[k][1] > max_val[1]:
+                        max_val[1] = reports[k][1]
+                    if reports[k][1] < min_val[1]:
+                        min_val[1] = reports[k][1]
+                    # Apogee of infection
+                    if reports[k][2] > max_val[2]:
+                        max_val[2] = reports[k][2]
+                    if reports[k][2] < min_val[2]:
+                        min_val[2] = reports[k][2]
+                # get median
+                medians = [
+                    med_sum[0] / len(reports),
+                    med_sum[1] / len(reports),
+                    med_sum[2] / len(reports)
+                ]
+                # deviation
+                deviations = [
+                    deviation(values[0], medians[0]),
+                    deviation(values[1], medians[1]),
+                    deviation(values[2], medians[2])
+                ]
+                # median_time
+                med_time = sum(total_time)/len(reports)
+                print('medians:')
+                print(medians)
+                print('max:')
+                print(max_val)
+                print('min:')
+                print(min_val)
+                print('deviation:')
+                print(deviations)
+                print(med_time)
+                # samples time //deviations// recovered max_inf apogee_inf
+                print('\noutput:%i %f %f %f %f\n' % (n_samples, med_time, deviations[0], deviations[1], deviations[2]))
+                f.write('%i %f %f %f %f\n' % (n_samples, med_time, deviations[0], deviations[1], deviations[2]))
+                print('done: %i\n' % (n_samples))
+
+def deviation(values, median):
+    sum_x = 0
+    for val in values:
+        sum_x += (val - median)**2
+    return math.sqrt( sum_x / ( len(values) - 1 ) )
 
 def remove_vacs(g):
     nodes_to_remove = []
@@ -114,5 +186,5 @@ def remove_vacs(g):
     g = nx.convert_node_labels_to_integers(g)
     return g
 
-#compare()
-simple()
+compare()
+#simple()
