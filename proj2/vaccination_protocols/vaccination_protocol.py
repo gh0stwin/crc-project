@@ -14,13 +14,19 @@ class VaccinationProtocol(ABC):
     def vaccinate_network(self, g, f, **kwargs):
         pass
 
-    def _get_n_random_nodes(self, g, n):
+    def _get_n_random_nodes(self, g, n, replace=False):
         nodes = list(range(len(g)))
         selected_nodes = []
 
         for _ in range(n):
             node_idx = np.random.randint(0, len(nodes))
-            selected_nodes.append(nodes.pop(node_idx))
+
+            if replace:
+                node = node[node_idx]
+            else:
+                node = nodes.pop(node_idx)
+
+            selected_nodes.append(node)
 
         return selected_nodes
 

@@ -69,13 +69,13 @@ class Sir(object):
         )
 
         self._vaccinate_before_sim()
+        n_vacc = int(round(len(self._g) * self._f))
         aux = self._first_infect_event()
         self._infected_node_edges, self._num_s_i_edges = aux
         self._infected_nodes = list(self._infected_node_edges.keys())
-        self._iterations_info = [[
-            len(self._g) - len(self._infected_nodes), 
-            len(self._infected_nodes)
-        ]]
+        self._iterations_info = [
+            len(self._g) - len(self._infected_nodes) - n_vacc
+        ]
 
     def _first_infect_event(self):
         susc_nodes = [
@@ -106,6 +106,7 @@ class Sir(object):
                 self._f, 
                 **self._vacc_protocol_args
             )
+
     def simulate(self):
         self._initialize_sir_network()
         
@@ -116,22 +117,19 @@ class Sir(object):
             self._check_new_iteration(time_inc_r)
             self._perform_infection_or_recovery_event(prob_to_infect)
 
-        return self._iterations_info, self._cost
+        return self._iterations_info
 
     def _check_new_iteration(self, time_inc_ratio):
         if np.random.uniform() < time_inc_ratio:
-            self._iterations_info.append([
-                self._iterations_info[-1][0], 
-                self._iterations_info[-1][1]
-            ])
+            self._iterations_info.append(
+                self._iterations_info[-1], 
+            )
 
     def _perform_infection_or_recovery_event(self, prob_to_infect):
         if np.random.uniform() < prob_to_infect:
-            self._iterations_info[-1][1] += 1
-            self._iterations_info[-1][0] -= 1
+            self._iterations_info[-1] -= 1
             self._infect_event()
         else:
-            self._iterations_info[-1][1] -= 1
             self._recover_event()
 
     def _infect_event(self):

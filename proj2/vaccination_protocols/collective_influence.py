@@ -12,10 +12,10 @@ class CollectiveInfluence(VaccinationProtocol):
 
     def vaccinate_network(self, g, f, state='state', **kwargs):
         l = kwargs.get('l', 3)
-        self._compute_ci(g, f, l)
+        self._compute_ci(g, f, l, state)
         return len(g)
 
-    def _compute_ci(self, g, f):
+    def _compute_ci(self, g, f, l, state):
         n_nodes_to_vacc = int(round(len(g) * f))
         graph_cp = g.copy()
 
@@ -28,7 +28,7 @@ class CollectiveInfluence(VaccinationProtocol):
                 k_neighs = nx.single_source_shortest_path_length(
                     graph_cp,
                     node,
-                    self._l
+                    l
                 )
 
                 for neigh in k_neighs.keys():

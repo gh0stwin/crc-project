@@ -13,9 +13,9 @@ class Simulator(ABC):
 
     def simulate_sir(self, file, g, beta, f, seed):
         vacc_prot, vacc_prot_args = self._get_vacc_prot_and_args()
-        res, c = Sir(g.copy(), beta, vacc_prot, {}, f, seed).simulate()
+        res = Sir(g.copy(), beta, vacc_prot, {}, f, seed).simulate()
         file.write(
-            '{},{},{},{}'.format(seed, res[-1][0], vacc_prot.acronym, c)
+            '{},{},{}\n'.format(seed, res[-1], vacc_prot.acronym)
         )
 
         return seed

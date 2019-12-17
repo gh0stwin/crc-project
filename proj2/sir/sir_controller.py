@@ -9,6 +9,7 @@ from sir.simulators.collective_influence_simulator import CollectiveInfluenceSim
 from sir.simulators.coreness_simulator import CorenessSimulator
 from sir.simulators.degree_simulator import DegreeSimulator
 from sir.simulators.dfs_simulator import DfsSimulator
+from sir.simulators.no_vaccination_simulator import NoVaccinationSimulator
 from sir.simulators.random_simulator import RandomSimulator
 from sir.simulators.random_walk_simulator import RandomWalkSimulator
 from sir.simulators.two_step_heuristic_simulator import TwoStepHeuristicSimulator
@@ -28,7 +29,7 @@ class SirController(object):
             TwoStepHeuristicSimulator(),
             DegreeSimulator(),
             CorenessSimulator(),
-            CollectiveInfluenceSimulator()
+            # CollectiveInfluenceSimulator()
         ]
     ):
         self._store_path = pl.Path(path)
@@ -41,7 +42,17 @@ class SirController(object):
             g = nx.convert_node_labels_to_integers(nx.read_gml(file))
 
             for beta in betas:
+                self._simulate_no_vacc(
+                    g, 
+                    beta, 
+                    self._get_res_filename(file, beta, 0), 
+                    times_per_beta_f
+                )
+
                 for f in fs:
+                    if f == 0:
+                        continue
+
                     self._simulate_for_net_beta_f(
                         self._get_res_filename(file, beta, f),
                         g, 
@@ -82,12 +93,30 @@ class SirController(object):
         res_f, 
         i
     ):
-        for vacc_protocol in self._vacc_protocols:
-            self._seed = vacc_protocol.simulate_sir(
+        for simulator in self._simulators:
+            sys.stdout.write('\rnetwork: {}, it: {}'.format(res_nm, i))
+            sys.stdout.flush()
+            self._seed = simulator.simulate_sir(
                 res_f,
                 g, 
                 beta, 
                 f, 
+                self._seed
+            )
+
+            self._seed += 1
+
+    def _simulate_no_vacc(self, g, beta, res_nm, iters):
+        res_f = open(res_nm, 'a')
+
+        for i in range(iters):
+            sys.stdout.write('\rnetwork: {}, it: {}'.format(res_nm, i))
+            sys.stdout.flush()
+            self._seed = NoVaccinationSimulator().simulate_sir(
+                res_f,
+                g, 
+                beta, 
+                0, 
                 self._seed
             )
 

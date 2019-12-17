@@ -2,32 +2,12 @@ import math
 import networkx as nx
 import os
 import pathlib as pl
+import traceback
 
-# from evaluate_results import _str_to_float
-def _str_to_float(str_num):
-    pass
-
+from evaluate_results import _str_to_float
 from graph_generator import configuration_model, dms
 from sir.sir_controller import SirController
 
-
-def create_networks(
-    nodes,
-    gen_graph_function,
-    gen_graph_args,
-    path,
-    graphs_per_node=100,
-    seed=0
-):
-    for n in nodes:
-        for i in range(graphs_per_node):
-            g = gen_graph_function(*((n,) + gen_graph_args + (seed,)))
-            file_path = (path + '_' + str(n) + '_' + str(i + 1) + '_' + 
-                str(seed) + '.gml'
-            )
-
-            nx.write_gml(g, file_path)
-            seed += 1
 
 def get_files_by_props(
     models, 
@@ -96,8 +76,34 @@ def check_files_with_no_results(
                     
     return miss_res
 
+def get_result_missing_files(
+    models, 
+    ns, 
+    betas, 
+    net_idxs, 
+    fs, 
+    path='./results/'
+):
+    results_files = [f.stem for f in pl.Path(path).glob('*.out')]
+
+    for model in models:
+        for n in ns:
+            for net_idx in net_idxs:
+                for beta in betas:
+                    for f in fs:
+                        f_name = '{}_{}_{}_{}_{}'.format(
+                            model,
+                            n,
+                            net_idx,
+                            beta.replace('.', ''),
+                            f.replace('.', '')
+                        )
+
+                        if f_name not in results_files:
+                            print(f_name)
+
 def run_files_with_miss_results(miss_results, iters, res_path):
-    sh = SirHandler(path=res_path)
+    sh = SirController(path=res_path)
 
     for file in miss_results:
         for beta in miss_results[file]:
@@ -109,33 +115,115 @@ def run_files_with_miss_results(miss_results, iters, res_path):
                 0
             )
 
+def parse_results(files):
+    for file in files:
+        # print(str(file))
+        f = open(file, 'r')
+        all_values = f.readline().split(',')
+        f.close()
+
+        values = []
+        line = []
+        i = 0
+        seed = None
+
+        try:
+            while i < len(all_values):
+                for _ in range(2):
+                    if i == 0:
+                        seed = int(all_values[0]) + 1
+
+                    line.append(all_values[i])
+                    i += 1
+
+                line.append(all_values[i])
+                if all_values[i] == 'RW' or all_values[i] == 'TS':
+                    l = 1
+                else:
+                    l = 0
+
+                i += 1
+
+                for _ in range(l):
+                    line.append(all_values[i])
+                    i += 1
+
+                if i == len(all_values) - 1:
+                    line.append(all_values[i])
+                    values.append(line)
+                    break
+                else:
+                    line.append(all_values[i][:-len(str(seed))])
+                    seed = int(all_values[i][-len(str(seed)):]) + 1
+                    all_values[i] = str(seed - 1)
+
+                values.append(line)
+                line = []
+        except Exception:
+            # traceback.print_exc()
+            print('error: ' + str(file))
+            # print(i)
+            continue
+
+        f = open(file, 'w')
+
+        for line in values:
+            f.write(line[0])
+
+            for i in range(len(line)):
+                if i == 0:
+                    continue
+
+                f.write(',' + line[i])
+
+            f.write('\n')
+
+        f.close()
+        
+def run_sir(
+    models, 
+    ns, 
+    betas, 
+    fs, 
+    iters, 
+    min_idx, 
+    max_idx,
+    seed,
+    net_path='./networks/', 
+    res_path='./results/'
+):
+    files = get_files_by_props(models, ns, min_idx, max_idx, net_path)
+    sh = SirController(res_path)
+    sh.simulate(files, betas, fs, iters, seed)
+    print('\ndone!')
+
 if __name__ == '__main__':
-    create_networks(
-        [625, 1250, 2500, 5000, 10000],
-        configuration_model,
-        (2.5, lambda n, g: int(round(n ** (1 / (g - 1))))),
-        './networks/configuration-model',
-        300,
-        0
-    )
+    # create_networks(
+    #     [625, 1250, 2500, 5000, 10000],
+    #     configuration_model,
+    #     (2.5, lambda n, g: int(round(n ** (1 / (g - 1))))),
+    #     './networks/configuration-model',
+    #     300,
+    #     0
+    # )
 
-    create_networks(
-        [625, 1250, 2500, 5000, 10000],
-        dms,
-        tuple(),
-        './networks/dms',
-        300,
-        0
-    )
+    # create_networks(
+    #     [625, 1250, 2500, 5000, 10000],
+    #     dms,
+    #     tuple(),
+    #     './networks/dms',
+    #     300,
+    #     0
+    # )
 
-    create_networks(
-        [625, 1250, 2500, 5000, 10000],
-        nx.barabasi_albert_graph,
-        (2,),
-        './networks/ba',
-        300,
-        0
-    )
+    # create_networks(
+    #     [625, 1250, 2500, 5000, 10000],
+    #     nx.barabasi_albert_graph,
+    #     (2,),
+    #     './networks/ba',
+    #     300,
+    #     0
+    # )
 
     ####################################################################
 
@@ -160,3 +248,26 @@ if __name__ == '__main__':
     # )
 
     # print(miss_res)
+
+    ####################################################################
+
+    files = sorted(pl.Path('.').glob('./results/*.out'))
+    parse_results(files)
+
+    ####################################################################
+
+    # networks_path = './networks/'
+    # results_path = './results/'
+    # betas = [2, 4, 8]
+    # fs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    # iters = 1
+    # files = get_files_by_props(
+    #     ['configuration-model'], 
+    #     [625], 
+    #     1617, 
+    #     101, 
+    #     networks_path
+    # )
+
+    # sh = SirController(results_path)
+    # sh.simulate(files, betas, fs, iters, 0)

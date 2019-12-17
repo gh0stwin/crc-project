@@ -12,13 +12,20 @@ class Bfs(VaccinationProtocol):
 
     def vaccinate_network(self, g, f, state='state', **kwargs):
         n_nodes_to_vacc = int(round(len(g) * f))
-        nodes = nx.bfs_predecessors(
-            g, np.random.randint(0, len(g))
-        ).keys()
+        vacc_nodes = 0
+        nodes = None
 
+        while vacc_nodes < n_nodes_to_vacc:
+            nodes = [n for n, _ in nx.bfs_predecessors(
+                g, np.random.randint(0, len(g))
+            )]
 
-        for i in range(n_nodes_to_vacc):
-            g.nodes[nodes[i]][state] = SirState.VACCINATED
-            i += 1
+            for node in nodes:
+                if g.nodes[node][state] == SirState.SUSCEPTIBLE:
+                    g.nodes[node][state] = SirState.VACCINATED
+                    vacc_nodes += 1
 
-        return 0
+                if vacc_nodes >= n_nodes_to_vacc:
+                    break
+
+        return len(g) * f

@@ -18,15 +18,15 @@ class TwoStepHeuristicSimulator(Simulator):
         return vacc_prots_and_args
 
     def simulate_sir(self, file, g, beta, f, seed):
-        g = g.copy()
-
         for vacc_prot, vacc_args in self._get_vacc_prot_and_args(g=g):
-            res, c = Sir(g, beta, vacc_prot, {}, f, seed).simulate()
-            file.write('{},{},{},{},{}'.format(
+            res = Sir(
+                g.copy(), beta, vacc_prot, {}, f, seed
+            ).simulate()
+
+            file.write('{},{},{},{}\n'.format(
                 seed,
-                res[-1][0], 
+                res[-1], 
                 vacc_prot.acronym, 
-                c,
                 vacc_args['n']
             ))
 

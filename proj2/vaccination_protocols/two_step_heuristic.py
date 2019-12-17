@@ -12,19 +12,22 @@ class TwoStepHeuristic(VaccinationProtocol):
 
     def vaccinate_network(self, g, f, state='state', **kwargs):
         n = kwargs.get('n', 0)
+        n_nodes_to_vacc = int(round(len(g) * f))
         reduced_g = self._get_subgraph(g, n)
         high_deg_nodes = self._high_deg_nodes_in_subgraph(
+            g,
             reduced_g, 
-            n
+            n,
+            n_nodes_to_vacc
         )
 
-        for node, _ in high_deg_nodes:
+        for node in high_deg_nodes:
             g.nodes[node][state] = SirState.VACCINATED
 
         return 2 * n
 
     def _get_subgraph(self, g, n):
-        n1_nodes = self._get_n_random_nodes(n)
+        n1_nodes = self._get_n_random_nodes(g, n)
         reduced_graph_nodes = list(n1_nodes)
 
         for node in n1_nodes:
@@ -32,7 +35,13 @@ class TwoStepHeuristic(VaccinationProtocol):
 
         return g.subgraph(reduced_graph_nodes)
 
-    def _high_deg_nodes_in_subgraph(self, reduced_graph, n):
+    def _high_deg_nodes_in_subgraph(
+        self, 
+        g, 
+        reduced_graph, 
+        n, 
+        n_nodes_to_vacc
+    ):
         high_deg_nodes_reduced_g = sorted(
             list(reduced_graph.degree), 
             key=lambda el: el[1], 
@@ -40,15 +49,15 @@ class TwoStepHeuristic(VaccinationProtocol):
         )[:n]
 
         high_deg_nodes = sorted(
-            list(self._g.degree(high_deg_nodes_reduced_g)),
+            list(g.degree(high_deg_nodes_reduced_g)),
             key=lambda el: el[1],
             reverse=True
-        )[:self._n_nodes_to_vacc]
+        )[:n_nodes_to_vacc]
 
-        diff = len(high_deg_nodes) - self._n_nodes_to_vacc
+        diff = len(high_deg_nodes) - n_nodes_to_vacc
 
         if diff < 0:
-            high_deg_nodes += self._get_n_random_nodes(abs(diff))
+            high_deg_nodes += self._get_n_random_nodes(g, abs(diff))
 
         return high_deg_nodes
 

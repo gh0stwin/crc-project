@@ -1,6 +1,7 @@
 import math
 import networkx as nx
 import numpy as np
+import pathlib as pl
 import random as rnd
 from scipy.special import zeta
 
@@ -51,7 +52,7 @@ def _connect_isolated_nodes(g, cum_deg_dist, max_deg):
         for _ in range(i + 1):
             neigh = node
 
-            while g.degree(neigh) >= max_deg or neigh == node:
+            while (not 0 < g.degree(neigh) < max_deg) or neigh == node:
                 neigh = np.random.randint(0, len(g))
 
             g.add_edge(node, neigh)
@@ -76,3 +77,68 @@ def dms(n, seed=None):
 
     return g
 
+def _create_networks(
+    nodes,
+    gen_graph_function,
+    gen_graph_args,
+    path,
+    graphs_per_node=100,
+    seed=0
+):
+    for n in nodes:
+        for i in range(graphs_per_node):
+            g = gen_graph_function(*((n,) + gen_graph_args + (seed,)))
+            file_path = (path + '_' + str(n) + '_' + str(i + 1) + '_' + 
+                str(seed) + '.gml'
+            )
+
+            nx.write_gml(g, file_path)
+            seed += 1
+
+if __name__ == '__main__':
+    # Create Graphs
+
+    # _create_networks(
+    #     [625, 1250, 2500, 5000, 10000],
+    #     configuration_model,
+    #     (2.5, lambda n, g: int(round(n ** (1 / (g - 1))))),
+    #     './networks/configuration-model',
+    #     300,
+    #     0
+    # )
+
+    # _create_networks(
+    #     [625, 1250, 2500, 5000, 10000],
+    #     dms,
+    #     tuple(),
+    #     './networks/dms',
+    #     300,
+    #     0
+    # )
+
+    # _create_networks(
+    #     [625, 1250, 2500, 5000, 10000],
+    #     nx.barabasi_albert_graph,
+    #     (2,),
+    #     './networks/ba',
+    #     300,
+    #     0
+    # )
+
+    ###################################################################
+
+    # Check if all graphs are connected
+
+    all_graph_files = pl.Path('.').glob('**/*.gml')
+    i = 0
+
+    for graph_file in all_graph_files:
+        g = nx.convert_node_labels_to_integers(nx.read_gml(graph_file))
+        
+        if not nx.is_connected(g):
+            i += 1
+            print(graph_file)
+
+    print(i)
+
+    ##################################################################
