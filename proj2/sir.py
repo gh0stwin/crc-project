@@ -5,13 +5,12 @@ import random as rnd
 import sys
 from graph_vacinator import methods
 
-
 SUSC = 'S'
 INF = 'I'
 REC = 'R'
 VAC = 'V'
 
-def sir_simulation(g, beta, seed=None):
+def sir_simulation(g, beta, my_pos, draw, seed=None):
     if seed:
         rnd.seed(seed)
 
@@ -27,7 +26,9 @@ def sir_simulation(g, beta, seed=None):
         infected_nodes, 
         infected_node_edges, 
         num_s_i_edges, 
-        iter_data
+        iter_data,
+        my_pos,
+        draw
     )
 
 def _sir_simulation_cycle(
@@ -36,11 +37,19 @@ def _sir_simulation_cycle(
     infected_nodes, 
     infected_node_edges, 
     num_s_i_edges, 
-    iter_data
+    iter_data,
+    my_pos,
+    draw
 ):
+    k = 0
+    inf = 0
+    rec = 0
+    inf_on = False
+    changed = 0 
     while infected_nodes:
         inf_r = beta * num_s_i_edges
-
+        #draw(g, my_pos, 'test/%s' % (k))
+        k += 1
         # if new cycle, record data
         if rnd.random() < 1 / (inf_r + len(infected_nodes)):
             # SUSC INF REC VAC
@@ -48,6 +57,13 @@ def _sir_simulation_cycle(
 
         # if infect event, infect one susceptible
         if rnd.random() < (inf_r / (inf_r + len(infected_nodes))):
+            if not inf_on:
+                print('REC %i' % (rec))
+                inf_on = True
+                rec = 0
+                changed += 1
+                draw(g, my_pos, 'test/%s' % (changed))
+            inf += 1
             iter_data[-1][1] += 1 # Add to INF count
             iter_data[-1][0] -= 1 # Reduce SUSC count
             num_s_i_edges = _infect_event(
@@ -57,6 +73,13 @@ def _sir_simulation_cycle(
                 num_s_i_edges
             )
         else:
+            if inf_on:
+                print('INF %i' % (inf))
+                inf_on = False
+                inf = 0
+                changed += 1
+                draw(g, my_pos, 'test/%s' % (changed))
+            rec += 1
             iter_data[-1][1] -= 1 # Reduce INF count
             iter_data[-1][2] += 1 # Add to REC count
             num_s_i_edges = _recover_event(
@@ -65,7 +88,7 @@ def _sir_simulation_cycle(
                 infected_node_edges, 
                 num_s_i_edges
             )
-        
+    print('CHANGED %i' % (changed))
     return sim_report(iter_data)
 
 def _neighbour_s_i_edges(g, i_node):

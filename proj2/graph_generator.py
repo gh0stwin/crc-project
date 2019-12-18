@@ -68,7 +68,11 @@ def create_DMS(n):
     edges = [(0,1),(2,0),(2,1)]
     # loop
     for k in range(3,n):
-        edge = edges[rnd.randint(0, 2*k-6)]
+        #print('edges ' + str(len(edges)))
+        #print('rnd ' + str(2*k-3))
+        a = rnd.randint(0, len(edges)-1)
+        edge = edges[a]
+        #print(a)
         G.add_node(k)
         G.add_edge(k, edge[0])
         G.add_edge(k, edge[1])

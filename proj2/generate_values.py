@@ -1,6 +1,7 @@
 import sir
 import graph_generator as gg 
 import graph_vacinator as gv
+import matplotlib.pyplot as plt
 import graph_modifier as gm
 import networkx as nx
 import time
@@ -26,14 +27,16 @@ network_dict = {
     'ba': lambda n: nx.barabasi_albert_graph(n,2),
     'dms':  gg.create_DMS
 }
-networks = ['ba', 'dms']
-#betas = [1/32, 1/16, 1/8, 1/4, 1/2, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
-betas1 = [1/8, 1/2, 2.0, 8.0, 32.0]
-betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
-Ns = [625, 1250, 2500, 5000, 10000]
+networks = ['dms']
+betas = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
+#betas1 = [1/8, 1/2, 2.0, 8.0, 32.0]
+#betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
+Ns = [625] #625, 1250, 2500, 5000, 10000]
 samples = [300]#, 10000, 100000]
-frac_vacs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+frac_vacs = [0.1]#[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 vaccination_methods = [
+    'hub',
+    'realbfs',
     'dfs',
     'bfs',
     'rnd',
@@ -52,6 +55,26 @@ def run_sir(n, m, frac, method, beta, network):
         nx.classes.function.set_node_attributes(g, SUSC, 'state')
         # vaccinate
         g = gv.methods[method](g, frac)
+        # TEST
+        color_map = []
+        for node in g:
+            if g.nodes[node]['state'] == VAC:
+                color_map.append('green')
+            elif g.nodes[node]['state'] == INF:
+                color_map.append('red')
+            elif g.nodes[node]['state'] == REC:
+                color_map.append('yellow')
+            else:
+                color_map.append('blue')
+        nx.draw_spring(
+            g,
+            edgecolors='black',
+            node_color = color_map,
+            node_size=100,
+            edge_color='#525252'
+        )
+        plt.show()
+        exit()
         #print("\t\t\t\tVACC %2.3f seconds" % (time.time() - start_time))
         # sir
         #start_time = time.time()
@@ -74,23 +97,23 @@ def simple():
         print('Network:%s' % (network))
         for method in vaccination_methods:
             print('METHOD %s' % (method))
-            f = open("values/%s/%s.txt" % (network, method), "w+")
+            f = open("values/new_dms/%s.txt" % (method), "w+")
             # N
             for n in Ns:
                 print('\tN: %i' % (n))
                 # Beta
-                for beta in betas1: # PEDRO MUDA AQUI TOTO
+                for beta in betas:
                     print('\t\tBeta: %f' % (beta))
                     # Fraction Vaccinated
                     for frac_vac in frac_vacs:
-                        print('\t\t\tFV: %.1f' % (frac_vac))
+                        print('\t\t\tFV: %.2f' % (frac_vac))
                         # Samples
                         for n_samples in samples:
                             print('\t\t\t\tSamples: %i' % (n_samples))
                             # run sir
                             report = run_sir(n, n_samples, frac_vac, method, beta, network_dict[network])
                             # get recovered
-                            f.write('%f %i %f %.1f %i %f %f\n' % (report[0], n, beta, frac_vac, n_samples, report[1], report[2]))
+                            f.write('%f %i %f %.2f %i %f %f\n' % (report[0], n, beta, frac_vac, n_samples, report[1], report[2]))
             f.close()
                     
             
@@ -186,5 +209,5 @@ def remove_vacs(g):
     g = nx.convert_node_labels_to_integers(g)
     return g
 
-compare()
-#simple()
+#compare()
+simple()

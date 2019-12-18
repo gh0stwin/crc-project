@@ -162,10 +162,51 @@ def acq_vaccinated_graph(g, frac_vac):
 
     return g
 
+def real_bfs(g, frac_vac):
+    '''
+    Breath First Search
+    '''
+    vac = 0
+    stack = []
+    nodes = len(g)
+    node = None
+    it = 0
+    while vac / nodes < frac_vac:
+        if it > len(stack) - 1:
+            node = rnd.randint(0, nodes - 1)
+            while g.nodes[node]['state'] == VAC:
+                node = rnd.randint(0, nodes - 1)
+        else:
+            node = stack[it]
+            it += 1     
+            if g.nodes[node]['state'] == VAC:
+                continue
+        # set vac
+        g.nodes[node]['state'] = VAC
+        vac += 1
+        # put non vac neighbors in stack
+        for neighbor in g.edges(node):
+            if g.nodes[neighbor[1]]['state'] == VAC:
+                continue
+            stack.append(neighbor[1])
+    return g
+
+def hub_vac(g, frac_vac):
+    '''
+    Vaccinate highest degree nodes until fraction of vac is reached
+    '''
+    list_highest = sorted(g.degree, key=lambda x: x[1], reverse=True)
+    number_of_highest_needed = int(len(g) * frac_vac)
+    for k in range(number_of_highest_needed):
+        g.nodes[list_highest[k][0]]['state'] = VAC
+    return g
+
 methods = {
     'dfs': dfs_vaccinated_graph_iter,
     'bfs': bfs_vaccinated_graph,
     'rnd': rnd_vaccinated_graph,
     'acq': acq_vaccinated_graph,
-    'rdw': rnd_walk_vaccinated_graph
+    'rdw': rnd_walk_vaccinated_graph,
+    'realbfs' : real_bfs,
+    'hub': hub_vac
 }
