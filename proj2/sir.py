@@ -49,7 +49,6 @@ def _sir_simulation_cycle(
     while infected_nodes:
         inf_r = beta * num_s_i_edges
         if k%10 == 0:
-            pass
             draw(g, my_pos, 'test/%s' % (k))
         k += 1
         # if new cycle, record data
