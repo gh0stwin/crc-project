@@ -12,4 +12,4 @@ filenames.sort()
 images = []
 for filename in filenames:
     images.append(imageio.imread('figures/test/%i.png' % (filename)))
-imageio.mimsave('figures/test/test.gif', images, format='GIF', duration=1/60)
+imageio.mimsave('figures/test/test.gif', images, format='GIF', duration=1/10)

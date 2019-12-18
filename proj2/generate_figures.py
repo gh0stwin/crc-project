@@ -16,15 +16,15 @@ network_dict = {
     'ba': lambda n: nx.barabasi_albert_graph(n,2),
     'dms':  gg.create_DMS
 }
-networks = ['ba', 'dms']
+networks = ['ba'] #['ba', 'dms']
 betas = [2]#[1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
 Ns = [625] #625, 1250, 2500, 5000, 10000]
 frac_vacs = [0.2]#[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 vaccination_methods = [
 #    'hub',
-    'realbfs',
-    'dfs',
-    'bfs',
+#    'realbfs',
+#    'dfs',
+#    'bfs',
     'rnd',
     'rdw',
     'acq'
@@ -32,6 +32,7 @@ vaccination_methods = [
 gamma = 3
 
 def draw_graph(g, my_pos, filename):
+    d = dict(g.degree)
     color_map = []
     for node in g:
         if g.nodes[node]['state'] == VAC:
@@ -49,7 +50,8 @@ def draw_graph(g, my_pos, filename):
         edgecolors='black',
         node_color = color_map,
         node_size=200,
-        edge_color='#525252'
+        edge_color='#525252',
+        #node_size=[v * 50 for v in d.values()]
     )
     plt.savefig('figures/%s.png' % (filename))
     plt.clf()
@@ -57,7 +59,7 @@ def draw_graph(g, my_pos, filename):
 # RUN SIR ONCE
 def run_sir(n, frac, method, beta, network, network_name):    
     g = network(n)
-    my_pos = nx.spring_layout(g, seed = 100)
+    my_pos = nx.kamada_kawai_layout(g)#, seed = 100)
     nx.classes.function.set_node_attributes(g, SUSC, 'state')
     # vaccinate
     g = gv.methods[method](g, frac)
