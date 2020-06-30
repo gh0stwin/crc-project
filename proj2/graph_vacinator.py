@@ -153,12 +153,18 @@ def acq_vaccinated_graph(g, frac_vac):
     nodes = len(g)
     while vac / nodes < frac_vac: 
         node = rnd.randint(0, nodes - 1)
+        unvac = []
         for neighbor in g.edges(node):
             if g.nodes[neighbor[1]]['state'] == VAC:
                 continue
-            g.nodes[neighbor[1]]['state'] = VAC
-            vac += 1
-            break
+            unvac.append(neighbor[1])
+        
+        unvac_size = len(unvac)
+        if unvac_size == 0:
+            continue
+        node = rnd.randint(0, unvac_size - 1)
+        g.nodes[unvac[node]]['state'] = VAC
+        vac += 1
 
     return g
 

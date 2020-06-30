@@ -26,17 +26,17 @@ network_dict = {
     'dms':  gg.create_DMS
 }
 networks = ['dms']
-#betas = [1/32, 1/16, 1/8, 1/4, 1/2, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
-betas1 = [1/8, 1/2, 2.0, 8.0, 32.0]
-betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
-Ns = [625, 1250, 2500, 5000, 10000]
+betas = [1/32, 1/16, 1/8, 1/4, 1/2, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
+# betas1 = [1/32, 1/2, 2.0, 8.0, 32.0]
+# betas2 = [1/32, 1/16, 1/4, 1.0, 4.0, 16.0]
+Ns = [625, 10000]
 samples = [300]
-frac_vacs = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+frac_vacs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 vaccination_methods = [
-    'dfs',
-    'bfs',
-    'rnd',
-    'rdw',
+    # 'dfs',
+    # 'bfs',
+    # 'rnd',
+    # 'rdw',
     'acq'
 ]
 gamma = 3
@@ -78,7 +78,7 @@ def simple():
             for n in Ns:
                 print('\tN: %i' % (n))
                 # Beta
-                for beta in betas2: # PEDRO MUDA AQUI TOTO
+                for beta in betas: # PEDRO MUDA AQUI TOTO
                     print('\t\tBeta: %f' % (beta))
                     # Fraction Vaccinated
                     for frac_vac in frac_vacs:
