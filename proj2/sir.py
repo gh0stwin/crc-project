@@ -10,7 +10,7 @@ INF = 'I'
 REC = 'R'
 VAC = 'V'
 
-def sir_simulation(g, beta, my_pos, draw, seed=None):
+def sir_simulation(g, beta, my_pos, draw, iter_draw = -1, filename = 0, seed=None):
     if seed:
         rnd.seed(seed)
 
@@ -28,7 +28,9 @@ def sir_simulation(g, beta, my_pos, draw, seed=None):
         num_s_i_edges, 
         iter_data,
         my_pos,
-        draw
+        draw,
+        iter_draw,
+        filename
     )
 
 def _sir_simulation_cycle(
@@ -39,17 +41,22 @@ def _sir_simulation_cycle(
     num_s_i_edges, 
     iter_data,
     my_pos,
-    draw
+    draw,
+    iter_draw,
+    filename
 ):
     k = 1
     inf = 0
     rec = 0
     inf_on = False
     changed = 0 
+    fname = filename + k
+    draw(g, my_pos, 'test/%s' % (fname), iter_draw)
     while infected_nodes:
         inf_r = beta * num_s_i_edges
-        if k%10 == 0:
-            draw(g, my_pos, 'test/%s' % (k))
+        #if k%5 == 0:
+        fname = filename + k
+        draw(g, my_pos, 'test/%s' % (fname), iter_draw)
         k += 1
         # if new cycle, record data
         if rnd.random() < 1 / (inf_r + len(infected_nodes)):
@@ -90,7 +97,10 @@ def _sir_simulation_cycle(
                 num_s_i_edges
             )
     print('CHANGED %i' % (changed))
-    return sim_report(iter_data)
+    fname = filename + k
+    draw(g, my_pos, 'test/%s' % (fname), iter_draw)
+    #return sim_report(iter_data)
+    return filename + k
 
 def _neighbour_s_i_edges(g, i_node):
     s_i_edges = []
